@@ -489,15 +489,13 @@
       <div class="panel">
         <button type="button" id="exportBtn">Exportar planilha</button>
         <button type="button" id="importBtn">Importar planilha</button>
-        <button type="button" id="clearDemoBtn">Limpar demonstração</button>
         <button type="button" class="danger" id="wipeBtn">Apagar todos os lançamentos</button>
       </div>
     </details>
   </div>
 </header>
 <div class="banner hidden" id="banner">
-  <span>Estes números são de demonstração, no formato do controle real. Limpe antes de começar o apontamento do turno.</span>
-  <button type="button" id="bannerClear">Limpar demonstração</button>
+  <span>Estes números são de demonstração, no formato do controle real. Para começar o turno, use Dados e apague todos os lançamentos com a senha.</span>
 </div>
 <main>
   <section class="kpis" id="kpis"></section>
@@ -602,6 +600,7 @@
 const DOCKS = ["1G", "1K", "1T", "1B", "1C", "30"];
 const CONTAINER_DOCK = "1G";
 const KEY = "saka-instab-v1";
+const WIPE_PASSWORD = "docas";
 const nf = new Intl.NumberFormat("pt-BR");
 const WEEK = ["domingo", "segunda", "terça", "quarta", "quinta", "sexta", "sábado"];
 
@@ -1675,11 +1674,6 @@ function importCsv(text) {
   render();
   alert(n + " linhas importadas e mescladas.");
 }
-function clearDemo() {
-  state.records = state.records.filter(r => !r.demo);
-  render();
-}
-
 document.querySelectorAll("nav.tabs button").forEach(b => b.addEventListener("click", () => setTab(b.dataset.tab)));
 document.getElementById("goPoint").onclick = () => setTab("apontamento");
 document.getElementById("prevDay").onclick = () => { state.date = addDays(state.date, -1); render(); };
@@ -1714,10 +1708,14 @@ document.getElementById("file").onchange = () => {
   reader.readAsText(f, "utf-8");
   document.getElementById("file").value = "";
 };
-document.getElementById("clearDemoBtn").onclick = clearDemo;
-document.getElementById("bannerClear").onclick = clearDemo;
 document.getElementById("wipeBtn").onclick = () => {
-  if (confirm("Apagar todos os lançamentos deste navegador?")) {
+  const typed = prompt("Senha para apagar todos os lançamentos:");
+  if (typed == null) return;
+  if (typed !== WIPE_PASSWORD) {
+    alert("Senha incorreta. Nenhum lançamento foi apagado.");
+    return;
+  }
+  if (confirm("Apagar todos os lançamentos?")) {
     state.records = [];
     render();
   }
