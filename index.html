@@ -735,18 +735,59 @@ function save() {
   };
   localStorage.setItem(KEY, JSON.stringify(data));
 }
+const INITIAL_RECORDS = [
+  { date: "2026-11-09", hour: 13, dock: "1C", origin: "Local", qty: 23, note: "", demo: false },
+  { date: "2026-11-09", hour: 13, dock: "1K", origin: "Local", qty: 43, note: "", demo: false },
+  { date: "2026-11-09", hour: 13, dock: "1B", origin: "Local", qty: 10, note: "", demo: false },
+  { date: "2026-11-09", hour: 10, dock: "1G", origin: "KD", qty: 2, note: "", demo: false },
+  { date: "2026-11-09", hour: 11, dock: "1G", origin: "KD", qty: 1, note: "", demo: false },
+  { date: "2026-11-09", hour: 14, dock: "1G", origin: "KD", qty: 1, note: "", demo: false },
+  { date: "2026-11-09", hour: 15, dock: "1C", origin: "Local", qty: 2, note: "", demo: false },
+  { date: "2026-11-09", hour: 15, dock: "1K", origin: "Local", qty: 1, note: "", demo: false },
+  { date: "2026-11-09", hour: 15, dock: "1T", origin: "Local", qty: 1, note: "", demo: false },
+  { date: "2026-11-09", hour: 15, dock: "1G", origin: "KD", qty: 3, note: "", demo: false },
+  { date: "2026-11-09", hour: 16, dock: "1C", origin: "Local", qty: 17, note: "", demo: false },
+  { date: "2026-11-09", hour: 16, dock: "1K", origin: "Local", qty: 19, note: "", demo: false },
+  { date: "2026-11-09", hour: 16, dock: "1T", origin: "Local", qty: 5, note: "", demo: false },
+  { date: "2026-11-09", hour: 16, dock: "1B", origin: "Local", qty: 1, note: "", demo: false },
+  { date: "2026-11-09", hour: 18, dock: "1K", origin: "Local", qty: 12, note: "", demo: false },
+  { date: "2026-11-09", hour: 18, dock: "30", origin: "Local", qty: 1, note: "", demo: false },
+  { date: "2026-11-09", hour: 19, dock: "30", origin: "Local", qty: 1, note: "", demo: false },
+  { date: "2026-11-09", hour: 16, dock: "1G", origin: "KD", qty: 1, note: "", demo: false },
+  { date: "2026-11-09", hour: 19, dock: "1T", origin: "Local", qty: 12, note: "", demo: false },
+  { date: "2026-11-09", hour: 19, dock: "1G", origin: "KD", qty: 1, note: "", demo: false },
+  { date: "2026-11-09", hour: 20, dock: "1C", origin: "Local", qty: 12, note: "", demo: false },
+  { date: "2026-11-09", hour: 20, dock: "1K", origin: "Local", qty: 1, note: "", demo: false },
+  { date: "2026-11-09", hour: 20, dock: "1T", origin: "Local", qty: 3, note: "", demo: false },
+  { date: "2026-11-09", hour: 20, dock: "30", origin: "Local", qty: 2, note: "", demo: false },
+  { date: "2026-11-09", hour: 20, dock: "1G", origin: "KD", qty: 2, note: "", demo: false },
+  { date: "2026-11-09", hour: 21, dock: "1C", origin: "Local", qty: 14, note: "", demo: false },
+  { date: "2026-11-09", hour: 21, dock: "1K", origin: "Local", qty: 3, note: "", demo: false },
+  { date: "2026-11-09", hour: 21, dock: "1T", origin: "Local", qty: 4, note: "", demo: false },
+  { date: "2026-11-09", hour: 21, dock: "30", origin: "Local", qty: 5, note: "", demo: false },
+  { date: "2026-11-09", hour: 21, dock: "1G", origin: "KD", qty: 4, note: "", demo: false }
+];
+
+function seedOriginal() {
+  state.records = foldContainer(INITIAL_RECORDS.map(r => ({ ...r })));
+  const dates = [...new Set(state.records.map(r => r.date))].sort();
+  if (dates.length) state.date = dates[dates.length - 1];
+}
 function boot() {
   const data = load();
   if (!data) {
-    state.records = demoRecords(todayIso());
+    seedOriginal();
     return;
   }
-  state.records = foldContainer(data.records);
+  const stored = Array.isArray(data.records) ? data.records : [];
+  const demoOnly = stored.length > 0 && stored.every(r => r.demo);
+  if (demoOnly) seedOriginal();
+  else state.records = foldContainer(stored);
   if (data.window) state.window = data.window;
   if (data.mode) state.mode = data.mode;
   if (data.scale) state.scale = data.scale;
   if (data.origin) state.origin = data.origin;
-  if (data.date) state.date = data.date;
+  if (data.date && !demoOnly) state.date = data.date;
   if (Number.isInteger(data.hour)) state.hour = data.hour;
   if (data.tab) state.tab = data.tab;
 }
