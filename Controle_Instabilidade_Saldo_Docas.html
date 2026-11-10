@@ -1,0 +1,1745 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#0e1a33" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-title" content="Saldo Docas" />
+<title>Controle de instabilidade de saldo — Docas</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230E1A33'/%3E%3Cpath d='M6 22h20M8 18l5-6 4 3 7-8' stroke='%233B82F6' stroke-width='2' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" />
+<style>
+  :root {
+    --navy: #0e1a33;
+    --navy-2: #162644;
+    --ink: #0f172a;
+    --muted: #64748b;
+    --line: #e6ebf2;
+    --bg: #eef2f7;
+    --card: #ffffff;
+    --kd: #3b82f6;
+    --local: #f5a524;
+    --total: #6d5efc;
+    --good: #159947;
+    --bad: #dc2626;
+    --shadow: 0 10px 30px rgba(15, 23, 42, .06);
+    --radius: 16px;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    font-family: "Segoe UI", Aptos, system-ui, sans-serif;
+    color: var(--ink);
+    background: var(--bg);
+  }
+  button, input, select { font-family: inherit; }
+  button { cursor: pointer; }
+  button:focus-visible, input:focus-visible { outline: 2px solid #93c5fd; outline-offset: 2px; }
+
+  header.top {
+    background: var(--navy);
+    color: white;
+    padding: 14px 22px 12px;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    flex-wrap: wrap;
+  }
+  .brand { display: flex; align-items: center; gap: 12px; min-width: 240px; }
+  .mark {
+    width: 38px; height: 38px; border-radius: 10px;
+    background: linear-gradient(160deg, #3b82f6, #6d5efc);
+    display: grid; place-items: center; flex: 0 0 auto;
+  }
+  .brand h1 { font-size: 15px; margin: 0; font-weight: 700; letter-spacing: .01em; }
+  .brand p { margin: 2px 0 0; color: #9fb0c9; font-size: 12px; }
+  nav.tabs { display: flex; gap: 6px; background: rgba(255,255,255,.06); padding: 4px; border-radius: 999px; }
+  nav.tabs button {
+    border: 0; background: transparent; color: #c9d5e6;
+    padding: 8px 14px; border-radius: 999px; font-size: 13px; font-weight: 600;
+  }
+  nav.tabs button.active { background: #fff; color: var(--navy); }
+  .top-actions { margin-left: auto; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .date-nav, .seg {
+    display: flex; align-items: center; gap: 4px;
+    background: var(--navy-2); border-radius: 999px; padding: 4px;
+  }
+  .date-nav strong { font-size: 13px; font-weight: 650; padding: 0 8px; min-width: 148px; text-align: center; }
+  .icon-btn, .seg button, .ghost {
+    border: 0; background: transparent; color: white;
+    border-radius: 999px; padding: 7px 10px; font-weight: 700;
+  }
+  .seg button { color: #c9d5e6; font-size: 12px; font-weight: 700; padding: 7px 10px; }
+  .seg button.active { background: #fff; color: var(--navy); }
+  .ghost.amber { background: #f5a524; color: #1f1403; }
+  .ghost.pdf { background: #fff; color: var(--navy); font-size: 13px; padding: 8px 12px; white-space: nowrap; }
+  .ghost.amber { white-space: nowrap; }
+  .menu { position: relative; }
+  .menu summary {
+    list-style: none; cursor: pointer; color: #d5e0ef; font-size: 13px; font-weight: 700;
+    padding: 8px 10px; border-radius: 999px;
+  }
+  .menu summary::-webkit-details-marker { display: none; }
+  .menu[open] summary { background: rgba(255,255,255,.08); }
+  .menu .panel {
+    position: absolute; right: 0; top: calc(100% + 6px); z-index: 20;
+    background: white; color: var(--ink); border-radius: 12px;
+    box-shadow: 0 16px 40px rgba(0,0,0,.18); min-width: 220px; padding: 6px;
+  }
+  .menu .panel button {
+    display: block; width: 100%; text-align: left; border: 0; background: transparent;
+    padding: 10px 12px; border-radius: 8px; font-weight: 600; color: var(--ink);
+  }
+  .menu .panel button:hover { background: #f1f5f9; }
+  .menu .panel button.danger { color: var(--bad); }
+
+  .banner {
+    background: #fff7e8; color: #7a4b00; border-bottom: 1px solid #f3ddb0;
+    padding: 10px 22px; display: flex; gap: 12px; align-items: center; justify-content: space-between;
+    font-size: 13px;
+  }
+  .banner button {
+    border: 0; background: #1f1403; color: white; border-radius: 999px;
+    padding: 8px 12px; font-weight: 700; white-space: nowrap;
+  }
+
+  main { width: min(1440px, calc(100% - 28px)); margin: 16px auto 20px; flex: 1; }
+  .kpis { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; }
+  .kpi {
+    background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow);
+    padding: 14px 14px 10px; min-width: 0; position: relative; overflow: hidden;
+  }
+  .kpi::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--accent); }
+  .kpi .head { display: flex; align-items: flex-start; gap: 8px; color: var(--muted); font-size: 11px; font-weight: 750; letter-spacing: .03em; }
+  .kpi .name { line-height: 1.25; min-width: 0; }
+  .bubble { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; color: white; font-size: 12px; flex: 0 0 auto; }
+  .bubble.alert { font-size: 16px; font-weight: 800; line-height: 1; }
+  .kpi .value { font-size: 28px; font-weight: 750; letter-spacing: -.03em; margin-top: 6px; line-height: 1.1; }
+  .kpi .value small { font-size: 14px; font-weight: 700; color: var(--muted); margin-left: 2px; }
+  .delta { margin-top: 4px; font-size: 12px; font-weight: 700; }
+  .delta.good { color: var(--good); }
+  .delta.bad { color: var(--bad); }
+  .delta.flat { color: var(--muted); }
+  .kpi svg.spark { width: 100%; height: 36px; display: block; margin-top: 6px; }
+  .kpi .foot { display: flex; justify-content: space-between; gap: 8px; margin-top: 4px; color: #94a3b8; font-size: 11px; font-weight: 650; }
+  .kpi .foot b { color: #334155; font-weight: 750; }
+
+  .grid { display: grid; grid-template-columns: 1.45fr .9fr; gap: 12px; margin-top: 12px; }
+  .card { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); padding: 16px 16px 12px; min-width: 0; }
+  #view-geral .grid > .card:first-child { display: flex; flex-direction: column; }
+  #horaInsights:empty { display: none; }
+  #horaInsights {
+    flex: 1;
+    display: grid;
+    grid-template-rows: 1fr 1fr;
+    gap: 8px;
+    margin-top: 12px;
+    min-height: 0;
+  }
+  .cmp {
+    background: #f8fafc;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 10px 12px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0;
+    min-height: 0;
+  }
+  .cmp-k { font-size: 11px; font-weight: 800; letter-spacing: .06em; color: var(--muted); }
+  .cmp-sides { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; flex: 1; min-height: 0; }
+  button.side {
+    border: 1px solid var(--line);
+    background: white;
+    border-radius: 12px;
+    padding: 8px 10px 8px 14px;
+    text-align: left;
+    color: inherit;
+    font: inherit;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: stretch;
+    min-height: 92px;
+    min-width: 0;
+  }
+  button.side::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; }
+  button.side.bad::before { background: var(--bad); }
+  button.side.good::before { background: var(--good); }
+  button.side.on { box-shadow: inset 0 0 0 2px #312e81; }
+  button.side:hover { border-color: #cbd5e1; }
+  button.side .role { display: block; font-size: 11px; font-weight: 800; letter-spacing: .04em; color: var(--muted); }
+  button.side .who { display: block; font-size: 28px; font-weight: 780; letter-spacing: -.03em; line-height: 1.05; margin-top: 2px; }
+  button.side .qty { display: block; font-size: 13px; font-weight: 750; margin-top: 3px; }
+  button.side .delta { margin-top: 4px; }
+  .meter { display: block; height: 7px; border-radius: 99px; background: #e8edf3; margin-top: 8px; overflow: hidden; }
+  .meter i { display: block; height: 100%; border-radius: 99px; }
+  .meter i.bad { background: var(--bad); }
+  .meter i.good { background: var(--good); }
+  .cmp-frase { margin: 0; font-size: 12.5px; line-height: 1.35; color: #334155; font-weight: 650; }
+  .card h2 { margin: 0; font-size: 13px; letter-spacing: .06em; font-weight: 800; }
+  .card .sub { color: var(--muted); font-size: 12px; margin: 4px 0 0; }
+  .card-head { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; flex-wrap: wrap; }
+  .controls { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+  .controls .seg { background: #f1f5f9; }
+  .controls .seg button { color: #475569; }
+  .controls .seg button.active { background: var(--navy); color: white; }
+  .callouts { display: flex; gap: 8px; flex-wrap: wrap; margin: 12px 0 4px; }
+  .pill {
+    background: #f8fafc; border: 1px solid var(--line); border-radius: 12px;
+    padding: 8px 10px; min-width: 120px;
+  }
+  .pill span { display: block; color: var(--muted); font-size: 11px; font-weight: 700; }
+  .pill b { font-size: 16px; }
+  .pill em { font-style: normal; font-size: 12px; font-weight: 750; margin-left: 4px; }
+  .chart-scroll { overflow-x: auto; margin-top: 4px; }
+  .chart-scroll svg { width: 100%; min-width: 640px; height: auto; display: block; }
+  #horaChart { overflow: hidden; flex-shrink: 0; }
+  #horaNote, #legend, #filterRow { flex-shrink: 0; }
+  #horaChart svg { min-width: 0 !important; width: 100%; }
+  .note { color: #92400e; background: #fffbeb; border-radius: 8px; padding: 8px 10px; font-size: 12px; margin-top: 8px; }
+  .legend { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+  .legend button {
+    border: 1px solid var(--line); background: white; border-radius: 999px;
+    padding: 5px 10px; font-size: 12px; font-weight: 750; color: #334155;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .legend button.off { opacity: .4; }
+  .legend .key {
+    display: inline-flex; align-items: center; gap: 6px;
+    border: 1px solid var(--line); background: #f8fafc; border-radius: 999px;
+    padding: 5px 10px; font-size: 12px; font-weight: 750; color: #334155;
+  }
+  .sw { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+  .sw.cell { width: 14px; height: 10px; border-radius: 3px; }
+  .chip {
+    display: inline-flex; align-items: center; gap: 6px; background: #e0e7ff; color: #312e81;
+    border-radius: 999px; padding: 4px 8px 4px 10px; font-size: 12px; font-weight: 750;
+  }
+  .chip button { border: 0; background: transparent; color: inherit; font-weight: 800; padding: 0 4px; }
+
+  #docaTable, #trendTable, #dayList { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 13px; }
+  th { text-align: right; font-size: 11px; letter-spacing: .04em; color: #94a3b8; font-weight: 800; padding: 8px 8px; border-bottom: 1px solid var(--line); }
+  th:first-child, td:first-child { text-align: left; }
+  td { padding: 8px; border-bottom: 1px solid #f1f5f9; text-align: right; font-variant-numeric: tabular-nums; }
+  tr.click:hover td { background: #f8fafc; cursor: pointer; }
+  tr.on td { background: #eef4ff; }
+  .tag { font-weight: 800; font-size: 12px; }
+  .tag.good { color: var(--good); }
+  .tag.bad { color: var(--bad); }
+  .tag.flat { color: var(--muted); }
+
+  .summary {
+    margin-top: 12px; background: white; border-radius: 18px; box-shadow: var(--shadow);
+    padding: 12px 14px; display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; align-items: center;
+  }
+  .sum { display: flex; gap: 10px; align-items: center; padding: 4px 6px; }
+  .orb {
+    width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center;
+    color: white; font-weight: 800; flex: 0 0 auto;
+  }
+  .sum b { display: block; font-size: 16px; }
+  .sum span { color: var(--muted); font-size: 12px; font-weight: 650; }
+  .destaque {
+    background: #f8fafc; border-radius: 14px; padding: 10px 12px; grid-column: span 2;
+  }
+  .destaque strong { display: block; font-size: 12px; letter-spacing: .04em; color: #64748b; }
+  .destaque p { margin: 4px 0 0; font-size: 13.5px; line-height: 1.35; }
+
+  .context {
+    display: grid; grid-template-columns: 1.2fr .8fr 1fr; gap: 12px; margin-bottom: 12px;
+  }
+  .context .card { display: flex; flex-direction: column; gap: 8px; }
+  .context h3 { margin: 0; font-size: 12px; letter-spacing: .05em; color: var(--muted); }
+  .big-switch { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .big-switch .now { font-size: 22px; font-weight: 780; letter-spacing: -.03em; }
+  .round {
+    width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--line);
+    background: white; font-size: 18px; font-weight: 700; color: var(--navy);
+  }
+  .hours { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; }
+  .hours button, .origin button {
+    border: 1px solid var(--line); background: white; border-radius: 999px;
+    padding: 7px 10px; font-weight: 750; color: #334155; flex: 0 0 auto;
+  }
+  .hours button.on, .origin button.on { background: var(--navy); color: white; border-color: var(--navy); }
+  .hours button.nowish { box-shadow: inset 0 0 0 2px #f5a524; }
+  .origin { display: flex; gap: 8px; }
+  .origin button { flex: 1; padding: 12px; border-radius: 12px; font-size: 15px; }
+  .live-stats { display: flex; gap: 16px; align-items: flex-end; }
+  .live-stats div b { display: block; font-size: 26px; line-height: 1; }
+  .live-stats div span { color: var(--muted); font-size: 12px; font-weight: 700; }
+
+  .docks { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; }
+  .dock {
+    background: white; border-radius: 18px; box-shadow: var(--shadow);
+    border: 1px solid transparent; min-height: 148px; padding: 12px;
+    display: flex; flex-direction: column; align-items: flex-start; position: relative;
+    text-align: left; touch-action: manipulation;
+  }
+  .dock:hover { border-color: #cbd5e1; }
+  .dock.container { background: #f8fbff; border-color: #93c5fd; }
+  .dock.container .nm, .dock.container .split { color: #1d4ed8; }
+  .dock:active { transform: translateY(1px); }
+  .dock .nm { font-weight: 800; letter-spacing: .04em; color: #64748b; font-size: 13px; }
+  .dock .q { font-size: 42px; font-weight: 780; letter-spacing: -.04em; line-height: 1; margin: 8px 0; }
+  .dock .split { color: var(--muted); font-size: 12px; font-weight: 650; }
+  .dock .minus {
+    position: absolute; top: 10px; right: 10px; width: 28px; height: 28px; border-radius: 50%;
+    border: 1px solid var(--line); background: #fff; color: #334155; font-weight: 800;
+  }
+  .hint { color: var(--muted); font-size: 12px; margin: 10px 2px; }
+  .list-card { margin-top: 12px; }
+  .row-del { border: 0; background: transparent; color: #b91c1c; font-weight: 750; }
+
+  #tip {
+    position: fixed; z-index: 40; display: none; pointer-events: none;
+    background: #0f172a; color: white; border-radius: 10px; padding: 8px 10px;
+    font-size: 12px; line-height: 1.45; box-shadow: 0 12px 30px rgba(0,0,0,.25); max-width: 240px;
+  }
+  .hidden { display: none !important; }
+  .empty {
+    padding: 28px 10px; text-align: center; color: var(--muted);
+  }
+  .empty button, .text-btn {
+    border: 0; background: var(--navy); color: white; border-radius: 999px;
+    padding: 8px 14px; font-weight: 750; margin-top: 8px;
+  }
+
+  @media (max-width: 1200px) {
+    .kpis { grid-template-columns: repeat(3, 1fr); }
+    .grid, .summary { grid-template-columns: 1fr 1fr; }
+    .context { grid-template-columns: 1fr 1fr; }
+    .destaque { grid-column: span 2; }
+    .docks { grid-template-columns: repeat(3, 1fr); }
+  }
+  @media (max-width: 900px) {
+    header.top {
+      padding: max(12px, env(safe-area-inset-top)) 14px 12px;
+      gap: 10px;
+    }
+    .brand { min-width: 0; flex: 1 1 200px; }
+    .brand h1 { font-size: 14px; }
+    nav.tabs { order: 5; width: 100%; }
+    nav.tabs button { flex: 1; text-align: center; padding: 10px 8px; }
+    .top-actions { margin-left: 0; width: 100%; gap: 8px; }
+    .date-nav { flex: 1 1 220px; min-width: 0; }
+    .date-nav strong { min-width: 0; flex: 1; font-size: 12px; padding: 0 6px; }
+    #windowSeg { flex: 1 1 160px; }
+    #windowSeg button { flex: 1; }
+    .grid, .context { grid-template-columns: 1fr; }
+    .kpis { grid-template-columns: repeat(2, 1fr); }
+    .summary { grid-template-columns: 1fr 1fr; }
+    .destaque { grid-column: 1 / -1; }
+    .docks { grid-template-columns: repeat(2, 1fr); }
+    .dock { min-height: 128px; }
+    .dock .q { font-size: 34px; }
+    .dock .minus { width: 40px; height: 40px; font-size: 20px; }
+    .kpi .value { font-size: 24px; }
+    .cmp-sides { grid-template-columns: 1fr 1fr; }
+    button.side .who { font-size: 22px; }
+    button.side { min-height: 78px; }
+    .controls { width: 100%; }
+    .controls .seg { flex: 1 1 100%; }
+    .controls .seg button { flex: 1; padding: 8px 6px; }
+    .banner { flex-direction: column; align-items: flex-start; padding: 10px 14px; }
+    .banner button { align-self: flex-start; }
+    main { width: min(1440px, calc(100% - 16px)); margin-bottom: max(20px, env(safe-area-inset-bottom)); }
+    .menu .panel { position: fixed; left: 12px; right: 12px; top: auto; bottom: max(12px, env(safe-area-inset-bottom)); min-width: 0; }
+    .hours button { min-height: 40px; padding: 8px 12px; }
+    .origin button { min-height: 48px; }
+    .round { width: 44px; height: 44px; }
+    .pill { flex: 1 1 calc(50% - 8px); min-width: 0; }
+    .chart-scroll svg { min-width: 0; }
+  }
+  @media (max-width: 420px) {
+    .brand p { display: none; }
+    .kpis { gap: 8px; }
+    .kpi { padding: 12px 10px 8px; }
+    .kpi .value { font-size: 22px; }
+    .kpi .head { font-size: 10px; }
+    .dock .q { font-size: 30px; }
+    .cmp-sides { grid-template-columns: 1fr; }
+  }
+
+  .pdf-stamp, .pdf-page-head { display: none; }
+  @page { size: A4 landscape; margin: 7mm; }
+  body.pdf-export {
+    background: white;
+    min-height: 0;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  body.pdf-export nav.tabs,
+  body.pdf-export .top-actions,
+  body.pdf-export .banner,
+  body.pdf-export #view-apontamento,
+  body.pdf-export #tip,
+  body.pdf-export .controls,
+  body.pdf-export #filterRow,
+  body.pdf-export #horaNote { display: none !important; }
+  body.pdf-export .pdf-stamp {
+    display: block;
+    margin-left: auto;
+    color: #d5e2f2;
+    font-size: 12px;
+    font-weight: 700;
+    text-align: right;
+    line-height: 1.3;
+  }
+  body.pdf-export header.top { padding: 8px 14px; }
+  body.pdf-export main { width: 100%; margin: 6px 0 0; }
+  body.pdf-export .kpis { grid-template-columns: repeat(6, 1fr) !important; gap: 6px; }
+  body.pdf-export .grid { grid-template-columns: 1.45fr .9fr !important; gap: 6px; margin-top: 6px; }
+  body.pdf-export .summary { grid-template-columns: repeat(5, 1fr) !important; margin-top: 6px; padding: 8px 10px; break-inside: avoid; }
+  body.pdf-export .destaque { grid-column: span 2 !important; }
+  body.pdf-export .kpi,
+  body.pdf-export .card,
+  body.pdf-export .summary { box-shadow: none; border: 1px solid #e6ebf2; }
+  body.pdf-export .kpi { padding: 6px 8px 4px; break-inside: avoid; }
+  body.pdf-export .kpi .head { font-size: 10px; }
+  body.pdf-export .kpi .value { font-size: 18px; margin-top: 2px; }
+  body.pdf-export .kpi svg.spark { height: 16px; margin-top: 2px; }
+  body.pdf-export .delta { margin-top: 0; }
+  body.pdf-export .card { padding: 8px 10px 6px; }
+  body.pdf-export .card h2 { font-size: 12px; }
+  body.pdf-export .chart-scroll { overflow: hidden; }
+  body.pdf-export .chart-scroll svg { min-width: 0 !important; width: auto !important; max-width: 100% !important; height: auto !important; }
+  body.pdf-export #horaChart svg { max-height: 188px; }
+  body.pdf-export #horaInsights { flex: none; display: grid; grid-template-rows: auto auto; gap: 4px; margin-top: 6px; }
+  body.pdf-export .cmp { padding: 5px 8px; gap: 2px; }
+  body.pdf-export .cmp-sides { flex: none; }
+  body.pdf-export button.side { min-height: 0; padding: 3px 8px 3px 10px; }
+  body.pdf-export button.side .who { font-size: 15px; }
+  body.pdf-export button.side .qty { font-size: 11px; }
+  body.pdf-export button.side .delta { font-size: 10px; margin-top: 0; }
+  body.pdf-export .meter { display: none; }
+  body.pdf-export .cmp-frase { font-size: 10px; }
+  body.pdf-export #docaChart svg { max-height: 112px; }
+  body.pdf-export table { font-size: 10px; }
+  body.pdf-export th, body.pdf-export td { padding: 2px 5px; }
+  body.pdf-export #view-tendencia {
+    display: block !important;
+    break-before: page;
+    page-break-before: always;
+  }
+  body.pdf-export .pdf-page-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    background: var(--navy);
+    color: white;
+    border-radius: 12px;
+    padding: 8px 14px;
+    margin-bottom: 8px;
+  }
+  body.pdf-export .pdf-page-head strong { font-size: 14px; }
+  body.pdf-export .pdf-page-head span { color: #d5e2f2; font-size: 12px; font-weight: 700; }
+  body.pdf-export #trendChart svg { max-height: 210px; width: 100% !important; }
+  body.pdf-export .callouts { margin: 6px 0 2px; }
+  body.pdf-export .pill { padding: 6px 8px; }
+  body.pdf-export .pill b { font-size: 14px; }
+  body.pdf-export .trend-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 0 14px; align-items: start; }
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="brand">
+    <div class="mark" aria-hidden="true">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+        <path d="M3 14h14M4 12l4-5 3 2.5L16 4" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <div>
+      <h1>Controle de instabilidade de saldo</h1>
+      <p>Docas · falha de migração · KD e local</p>
+    </div>
+  </div>
+  <div class="pdf-stamp" id="pdfStamp"></div>
+  <nav class="tabs" role="tablist">
+    <button type="button" data-tab="geral" class="active">Visão geral</button>
+    <button type="button" data-tab="tendencia">Tendência</button>
+    <button type="button" data-tab="apontamento">Apontamento</button>
+  </nav>
+  <div class="top-actions">
+    <div class="date-nav" title="Dia em análise">
+      <button type="button" class="icon-btn" id="prevDay" aria-label="Dia anterior">‹</button>
+      <strong id="dateLabel">—</strong>
+      <button type="button" class="icon-btn" id="nextDay" aria-label="Próximo dia">›</button>
+      <button type="button" class="icon-btn" id="goToday">Hoje</button>
+    </div>
+    <div class="seg" id="windowSeg" title="Janela da tendência">
+      <button type="button" data-window="7">7d</button>
+      <button type="button" data-window="14">14d</button>
+      <button type="button" data-window="30">30d</button>
+    </div>
+    <button type="button" class="ghost amber" id="goPoint">Apontar</button>
+    <button type="button" class="ghost pdf" id="pdfBtn" title="PDF de 2 páginas: visão geral e tendência">Gerar PDF</button>
+    <details class="menu">
+      <summary>Dados</summary>
+      <div class="panel">
+        <button type="button" id="exportBtn">Exportar planilha</button>
+        <button type="button" id="importBtn">Importar planilha</button>
+        <button type="button" id="clearDemoBtn">Limpar demonstração</button>
+        <button type="button" class="danger" id="wipeBtn">Apagar todos os lançamentos</button>
+      </div>
+    </details>
+  </div>
+</header>
+<div class="banner hidden" id="banner">
+  <span>Estes números são de demonstração, no formato do controle real. Limpe antes de começar o apontamento do turno.</span>
+  <button type="button" id="bannerClear">Limpar demonstração</button>
+</div>
+<main>
+  <section class="kpis" id="kpis"></section>
+
+  <section id="view-geral">
+    <div class="grid">
+      <article class="card">
+        <div class="card-head">
+          <div>
+            <h2>FALHAS POR HORA</h2>
+            <p class="sub" id="horaSub">Acumulado de cada hora no dia selecionado.</p>
+          </div>
+          <div class="controls">
+            <div class="seg" id="modeSeg">
+              <button type="button" data-mode="barras">Barras</button>
+              <button type="button" data-mode="mapa">Mapa</button>
+              <button type="button" data-mode="docas">Por doca</button>
+            </div>
+            <div class="seg" id="scaleSeg">
+              <button type="button" data-scale="auto">Escala auto</button>
+              <button type="button" data-scale="cheia">Escala cheia</button>
+              <button type="button" data-scale="recorte">Recortar pico</button>
+            </div>
+          </div>
+        </div>
+        <div id="filterRow" style="margin-top:8px"></div>
+        <div class="legend" id="legend"></div>
+        <div class="chart-scroll" id="horaChart"></div>
+        <div id="horaNote"></div>
+        <div id="horaInsights"></div>
+      </article>
+      <article class="card">
+        <div class="card-head">
+          <div>
+            <h2>FALHAS POR DOCA</h2>
+            <p class="sub">Clique na doca para isolar a hora a hora.</p>
+          </div>
+        </div>
+        <div class="chart-scroll" id="docaChart"></div>
+        <div id="docaTable"></div>
+      </article>
+    </div>
+  </section>
+
+  <section id="view-tendencia" class="hidden">
+    <div class="pdf-page-head"><strong>Tendência</strong><span id="pdfTrendHead"></span></div>
+    <article class="card">
+      <div class="card-head">
+        <div>
+          <h2>TENDÊNCIA DO ACUMULADO DIÁRIO</h2>
+          <p class="sub">Cada ponto é o total de falhas fechado no dia. Queda é melhora.</p>
+        </div>
+      </div>
+      <div class="callouts" id="trendCallouts"></div>
+      <div class="chart-scroll" id="trendChart"></div>
+      <div id="trendTable"></div>
+    </article>
+  </section>
+
+  <section id="view-apontamento" class="hidden">
+    <div class="context">
+      <article class="card">
+        <h3>HORA DO APONTAMENTO</h3>
+        <div class="big-switch">
+          <button type="button" class="round" id="prevHour" aria-label="Hora anterior">−</button>
+          <div class="now" id="hourNow">06h</div>
+          <button type="button" class="round" id="nextHour" aria-label="Próxima hora">+</button>
+        </div>
+        <div class="hours" id="hourChips"></div>
+      </article>
+      <article class="card">
+        <h3>ORIGEM DO MATERIAL</h3>
+        <div class="origin" id="originSeg">
+          <button type="button" data-origin="KD">KD</button>
+          <button type="button" data-origin="Local">Local</button>
+        </div>
+        <p class="sub" style="margin:0">O toque na doca soma 1 falha desta origem, nesta hora. A doca 1G é sempre container.</p>
+      </article>
+      <article class="card">
+        <h3>ACUMULADO DESTE DIA</h3>
+        <div class="live-stats" id="liveStats"></div>
+      </article>
+    </div>
+    <div class="docks" id="docks"></div>
+    <p class="hint">Toque na doca para somar 1. O botão − desfaz. Clique no número para digitar o total da hora. Teclas 1 a 6 somam na ordem 1G, 1K, 1T, 1B, 1C e 30.</p>
+    <article class="card list-card">
+      <div class="card-head">
+        <div>
+          <h2>LANÇAMENTOS DO DIA</h2>
+          <p class="sub">Uma linha por data, hora, doca e origem. Ajustar aqui atualiza o acumulado.</p>
+        </div>
+      </div>
+      <div id="dayList"></div>
+    </article>
+  </section>
+
+  <section class="summary" id="summary"></section>
+</main>
+<div id="tip"></div>
+<input type="file" id="file" accept=".csv,text/csv" class="hidden" />
+<script>
+const DOCKS = ["1G", "1K", "1T", "1B", "1C", "30"];
+const CONTAINER_DOCK = "1G";
+const KEY = "saka-instab-v1";
+const nf = new Intl.NumberFormat("pt-BR");
+const WEEK = ["domingo", "segunda", "terça", "quarta", "quinta", "sexta", "sábado"];
+
+let pdfMode = false;
+const state = {
+  tab: "geral",
+  date: todayIso(),
+  hour: new Date().getHours(),
+  origin: "KD",
+  window: 14,
+  mode: "barras",
+  scale: "auto",
+  dock: null,
+  showKd: true,
+  showLocal: true,
+  records: []
+};
+
+function todayIso() {
+  const d = new Date();
+  return iso(d);
+}
+function iso(d) {
+  return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+}
+function parseIso(s) {
+  const [y, m, d] = s.split("-").map(Number);
+  return new Date(y, m - 1, d);
+}
+function addDays(s, n) {
+  const d = parseIso(s);
+  d.setDate(d.getDate() + n);
+  return iso(d);
+}
+function fmtDate(s) {
+  const d = parseIso(s);
+  const dd = String(d.getDate()).padStart(2, "0");
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  return dd + "/" + mm;
+}
+function fmtDateLong(s) {
+  const d = parseIso(s);
+  const wk = WEEK[d.getDay()];
+  return wk + ", " + fmtDate(s) + "/" + d.getFullYear();
+}
+function hh(h) { return String(h).padStart(2, "0") + "h"; }
+function recKey(r) { return r.date + "|" + r.hour + "|" + r.dock + "|" + r.origin; }
+function isContainerDock(dock) { return dock === CONTAINER_DOCK; }
+function originFor(dock) { return isContainerDock(dock) ? "KD" : state.origin; }
+function foldContainer(records) {
+  const map = new Map();
+  for (const r of records) {
+    const copy = { ...r };
+    if (isContainerDock(copy.dock)) copy.origin = "KD";
+    const k = recKey(copy);
+    if (map.has(k)) {
+      const prev = map.get(k);
+      prev.qty += copy.qty;
+      if (!copy.demo) prev.demo = false;
+    } else map.set(k, copy);
+  }
+  return [...map.values()];
+}
+
+function mulberry32(a) {
+  return function () {
+    a |= 0; a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+function demoRecords(day) {
+  const map = new Map();
+  const put = (r, replace) => {
+    const k = recKey(r);
+    if (map.has(k) && !replace) map.get(k).qty += r.qty;
+    else map.set(k, { note: "", demo: true, ...r });
+  };
+  const rnd = mulberry32(20261109);
+  for (let back = 13; back >= 1; back--) {
+    const date = addDays(day, -back);
+    const intensity = 0.7 + (back / 13) * 1.15;
+    for (let h = 6; h <= 20; h++) {
+      if (rnd() > 0.62) continue;
+      const dock = DOCKS[Math.floor(rnd() * DOCKS.length)];
+      const origin = isContainerDock(dock) ? "KD" : (rnd() > 0.48 ? "KD" : "Local");
+      let qty = 1;
+      if (rnd() > 0.72) qty = 2;
+      if (rnd() > 0.93) qty = 4;
+      qty = Math.max(1, Math.round(qty * intensity));
+      put({ date, hour: h, dock, origin, qty });
+    }
+  }
+  const y = addDays(day, -1);
+  put({ date: y, hour: 8, dock: "1T", origin: "KD", qty: 40, note: "Pico de exemplo" }, true);
+  const todayRows = [
+    ["KD", 6, "1G", 3], ["KD", 7, "1G", 1], ["KD", 8, "1K", 2], ["KD", 10, "1T", 1],
+    ["KD", 12, "1B", 1], ["KD", 14, "1C", 1], ["KD", 16, "30", 2], ["KD", 18, "1G", 1], ["KD", 20, "1K", 1],
+    ["Local", 6, "1G", 2], ["Local", 7, "1G", 1], ["Local", 8, "1K", 1], ["Local", 9, "1K", 1],
+    ["Local", 11, "1T", 2], ["Local", 13, "1B", 1], ["Local", 15, "1C", 1], ["Local", 17, "30", 1], ["Local", 21, "1T", 1]
+  ];
+  for (const [origin, hour, dock, qty] of todayRows) put({ date: day, hour, dock, origin: isContainerDock(dock) ? "KD" : origin, qty }, true);
+  return foldContainer([...map.values()]);
+}
+
+function load() {
+  try {
+    if (window.__SAKA_PDF_DATA__) {
+      const seeded = JSON.parse(window.__SAKA_PDF_DATA__);
+      if (seeded && Array.isArray(seeded.records)) return seeded;
+    }
+  } catch (e) {}
+  try {
+    const raw = localStorage.getItem(KEY);
+    if (!raw) return null;
+    const data = JSON.parse(raw);
+    if (!data || !Array.isArray(data.records)) return null;
+    return data;
+  } catch (e) { return null; }
+}
+function save() {
+  const data = {
+    records: state.records,
+    window: state.window,
+    mode: state.mode,
+    scale: state.scale,
+    origin: state.origin,
+    date: state.date,
+    hour: state.hour,
+    tab: state.tab
+  };
+  localStorage.setItem(KEY, JSON.stringify(data));
+}
+function boot() {
+  const data = load();
+  if (!data) {
+    state.records = demoRecords(todayIso());
+    return;
+  }
+  state.records = foldContainer(data.records);
+  if (data.window) state.window = data.window;
+  if (data.mode) state.mode = data.mode;
+  if (data.scale) state.scale = data.scale;
+  if (data.origin) state.origin = data.origin;
+  if (data.date) state.date = data.date;
+  if (Number.isInteger(data.hour)) state.hour = data.hour;
+  if (data.tab) state.tab = data.tab;
+}
+
+function recordsOn(date) {
+  return state.records.filter(r => r.date === date && r.qty > 0);
+}
+function qtyOf(date, hour, dock, origin) {
+  const r = state.records.find(x => x.date === date && x.hour === hour && x.dock === dock && x.origin === origin);
+  return r ? r.qty : 0;
+}
+function sumWhere(date, pred) {
+  let n = 0;
+  for (const r of state.records) if (r.date === date && r.qty > 0 && (!pred || pred(r))) n += r.qty;
+  return n;
+}
+function dayParts(date) {
+  const kd = sumWhere(date, r => r.origin === "KD");
+  const local = sumWhere(date, r => r.origin === "Local");
+  return { kd, local, total: kd + local };
+}
+function change(cur, prev) {
+  if (prev == null) return { dir: "flat", good: true, text: "sem base", word: "" };
+  if (cur === prev) return { dir: "flat", good: true, text: "", word: "estável" };
+  if (prev === 0) return { dir: "up", good: false, text: nf.format(cur), word: "piora" };
+  const pct = (cur - prev) / prev;
+  const dir = cur < prev ? "down" : "up";
+  const good = cur < prev;
+  let text = Math.abs(pct).toLocaleString("pt-BR", { style: "percent", maximumFractionDigits: 0 });
+  if (Math.abs(pct) >= 1.5) text = nf.format(prev) + " → " + nf.format(cur);
+  const word = dir === "down" ? "melhora" : "piora";
+  return { dir, good, text, word, pct };
+}
+function deltaHtml(ch, suffix) {
+  if (!ch.word || ch.text === "sem base") return '<span class="delta flat">sem comparação</span>';
+  if (ch.dir === "flat") return '<span class="delta flat">estável</span>';
+  const cls = ch.good ? "good" : "bad";
+  const arrow = ch.dir === "down" ? "▼" : "▲";
+  return '<span class="delta ' + cls + '">' + arrow + " " + ch.text + " " + ch.word + (suffix ? " " + suffix : "") + "</span>";
+}
+function windowDates() {
+  const out = [];
+  for (let i = state.window - 1; i >= 0; i--) out.push(addDays(state.date, -i));
+  return out;
+}
+function hourTotals(date, dock) {
+  const hours = visibleHours(date);
+  return hours.map(h => {
+    let kd = 0, local = 0;
+    for (const r of state.records) {
+      if (r.date !== date || r.hour !== h || r.qty <= 0) continue;
+      if (dock && r.dock !== dock) continue;
+      if (r.origin === "KD" && state.showKd) kd += r.qty;
+      if (r.origin === "Local" && state.showLocal) local += r.qty;
+    }
+    return { h, kd, local, total: kd + local };
+  });
+}
+function visibleHours() {
+  const out = [];
+  for (let h = 0; h <= 23; h++) out.push(h);
+  return out;
+}
+function dockTotals(date) {
+  return DOCKS.map(dock => {
+    const kd = sumWhere(date, r => r.dock === dock && r.origin === "KD");
+    const local = sumWhere(date, r => r.dock === dock && r.origin === "Local");
+    return { dock, kd, local, total: kd + local };
+  });
+}
+function pointedHours(date) {
+  const set = new Set();
+  for (const r of recordsOn(date)) set.add(r.hour);
+  return [...set].sort((a, b) => a - b);
+}
+function hourTotal(date, hour) {
+  let n = 0;
+  for (const r of state.records) if (r.date === date && r.hour === hour && r.qty > 0) n += r.qty;
+  return n;
+}
+function lastHourResult(date) {
+  const hours = pointedHours(date);
+  if (!hours.length) return { hour: null, total: 0, prevHour: null, prevTotal: null, series: [] };
+  const hour = hours[hours.length - 1];
+  let prevHour = null;
+  let prevTotal = null;
+  if (hours.length > 1) {
+    prevHour = hours[hours.length - 2];
+    prevTotal = hourTotal(date, prevHour);
+  } else {
+    const y = addDays(date, -1);
+    const yHours = pointedHours(y);
+    if (yHours.length) {
+      prevHour = yHours[yHours.length - 1];
+      prevTotal = hourTotal(y, prevHour);
+    }
+  }
+  return { hour, total: hourTotal(date, hour), prevHour, prevTotal, series: hours.map(h => hourTotal(date, h)) };
+}
+function peakHour(date) {
+  const rows = hourTotals(date, state.dock);
+  let best = null;
+  for (const row of rows) if (!best || row.total > best.total) best = row;
+  return best && best.total > 0 ? best : null;
+}
+function peakDock(date) {
+  const rows = dockTotals(date);
+  let best = null;
+  for (const row of rows) if (!best || row.total > best.total) best = row;
+  return best && best.total > 0 ? best : null;
+}
+function niceMax(v) {
+  if (v <= 5) return 5;
+  const p = Math.pow(10, Math.floor(Math.log10(v)));
+  const n = v / p;
+  const m = n <= 1 ? 1 : n <= 2 ? 2 : n <= 5 ? 5 : 10;
+  return m * p;
+}
+function scaleInfo(values) {
+  const max = Math.max(0, ...values);
+  const sorted = values.filter(v => v > 0).sort((a, b) => b - a);
+  const second = sorted.length > 1 ? sorted[1] : 0;
+  const outlier = max >= 8 && second > 0 && max >= second * 3;
+  const want = state.scale === "recorte" || (state.scale === "auto" && outlier);
+  if (want && second > 0 && max > second) {
+    let cap = niceMax(Math.max(second * 1.45, second + 1));
+    if (cap >= max) return { max: niceMax(Math.max(max, 1)), clipped: false, realMax: max };
+    return { max: cap, clipped: true, realMax: max, second };
+  }
+  return { max: niceMax(Math.max(max, 1)), clipped: false, realMax: max, second };
+}
+function hasDemo() { return state.records.some(r => r.demo); }
+
+function svgEl(name, attrs) {
+  const el = document.createElementNS("http://www.w3.org/2000/svg", name);
+  for (const k in attrs) el.setAttribute(k, attrs[k]);
+  return el;
+}
+function svgText(parent, attrs, text) {
+  const el = svgEl("text", attrs);
+  el.textContent = text == null ? "" : String(text);
+  parent.append(el);
+  return el;
+}
+function clear(node) { node.replaceChildren(); }
+
+function sparkLine(values, color, fillOpacity) {
+  const w = 160, h = 36, p = 2;
+  const max = Math.max(1, ...values);
+  const svg = svgEl("svg", { viewBox: "0 0 " + w + " " + h, class: "spark" });
+  if (!values.length) return svg;
+  const step = values.length === 1 ? 0 : (w - p * 2) / (values.length - 1);
+  const pts = values.map((v, i) => [p + i * step, h - p - (v / max) * (h - p * 2)]);
+  const d = pts.map((pt, i) => (i ? "L" : "M") + pt[0].toFixed(1) + " " + pt[1].toFixed(1)).join(" ");
+  const fill = d + " L" + pts[pts.length - 1][0].toFixed(1) + " " + h + " L" + pts[0][0].toFixed(1) + " " + h + " Z";
+  svg.append(svgEl("path", { d: fill, fill: color, opacity: String(fillOpacity == null ? 0.16 : fillOpacity) }));
+  svg.append(svgEl("path", { d, fill: "none", stroke: color, "stroke-width": fillOpacity == null ? "2" : "2.4", "stroke-linejoin": "round", "stroke-linecap": "round" }));
+  return svg;
+}
+function sparkBars(values, color, withLabels) {
+  const w = 160;
+  const labelH = withLabels ? 13 : 0;
+  const h = 36 + labelH;
+  const svg = svgEl("svg", { viewBox: "0 0 " + w + " " + h, class: "spark" });
+  if (withLabels) svg.style.height = "52px";
+  const max = Math.max(1, ...values);
+  const n = values.length || 1;
+  const gap = 3;
+  const bw = Math.max(2, (w - gap * (n - 1)) / n);
+  const room = h - labelH - 3;
+  values.forEach((v, i) => {
+    const bh = Math.max(v > 0 ? 2 : 0, (v / max) * room);
+    const x = i * (bw + gap);
+    const y = h - 1 - bh;
+    svg.append(svgEl("rect", {
+      x: x.toFixed(1), y: y.toFixed(1),
+      width: bw.toFixed(1), height: bh.toFixed(1), rx: "1.5", fill: color, opacity: v ? "1" : ".25"
+    }));
+    if (withLabels && v > 0) {
+      svgText(svg, {
+        x: (x + bw / 2).toFixed(1), y: Math.max(10, y - 1).toFixed(1),
+        "text-anchor": "middle", "font-size": "10", "font-weight": "800", fill: "#0f172a"
+      }, nf.format(v));
+    }
+  });
+  return svg;
+}
+
+function renderKpis() {
+  const box = document.getElementById("kpis");
+  clear(box);
+  const cur = dayParts(state.date);
+  const prev = dayParts(addDays(state.date, -1));
+  const dates = windowDates();
+  const series = dates.map(d => dayParts(d));
+  const ph = peakHour(state.date);
+  const pd = peakDock(state.date);
+  const last = lastHourResult(state.date);
+  const cards = [
+    { label: "ACUMULADO DO DIA", color: "#6d5efc", value: nf.format(cur.total), delta: change(cur.total, prev.total), foot: ["Ontem", nf.format(prev.total)], spark: sparkLine(series.map(x => x.total), "#6d5efc") },
+    { label: "MATERIAIS KD", color: "#3b82f6", value: nf.format(cur.kd), delta: change(cur.kd, prev.kd), foot: ["Ontem", nf.format(prev.kd)], spark: sparkLine(series.map(x => x.kd), "#3b82f6") },
+    { label: "MATERIAIS LOCAIS", color: "#f5a524", value: nf.format(cur.local), delta: change(cur.local, prev.local), foot: ["Ontem", nf.format(prev.local)], spark: sparkLine(series.map(x => x.local), "#f5a524") },
+    { label: "HORA CRÍTICA", color: "#0f9f8f", value: ph ? hh(ph.h) : "—", delta: null, foot: [ph ? nf.format(ph.total) + " falhas" : "sem falha", ""], spark: sparkBars(hourTotals(state.date, null).map(x => x.total), "#0f9f8f"), extra: ph ? "concentração do dia" : "dia limpo" },
+    { label: "DOCA CRÍTICA", color: "#e11d48", value: pd ? pd.dock : "—", delta: null, foot: [pd ? nf.format(pd.total) + " falhas" : "sem falha", cur.total ? Math.round(pd.total / cur.total * 100) + "%" : ""], spark: sparkBars(dockTotals(state.date).map(x => x.total), "#e11d48", true), extra: "maior volume" },
+    { label: "RESULTADO DO ÚLTIMO HORÁRIO", color: "#dc2626", glyph: "!", value: last.hour == null ? "—" : nf.format(last.total), delta: last.hour == null ? null : change(last.total, last.prevTotal), deltaSuffix: "vs hora ant.", foot: [last.hour == null ? "Sem apontamento" : "Última hora", last.hour == null ? "" : hh(last.hour)], spark: sparkLine(last.series, "#dc2626", 0.28), extra: last.prevHour == null ? "" : "ant. " + hh(last.prevHour) + " · " + nf.format(last.prevTotal) }
+  ];
+  for (const c of cards) {
+    const art = document.createElement("article");
+    art.className = "kpi";
+    art.style.setProperty("--accent", c.color);
+    art.innerHTML =
+      '<div class="head"><span class="bubble' + (c.glyph === "!" ? " alert" : "") + '" style="background:' + c.color + '">' + (c.glyph || "●") + '</span><span class="name">' + c.label + "</span></div>" +
+      '<div class="value">' + c.value + "</div>" +
+      (c.delta ? deltaHtml(c.delta, c.deltaSuffix) : '<span class="delta flat">' + (c.extra || "") + "</span>") +
+      '<div class="spark-host"></div>' +
+      '<div class="foot"><span>' + c.foot[0] + ' <b>' + c.foot[1] + "</b></span><span>" + (c.delta && c.extra ? c.extra : "") + "</span></div>";
+    art.querySelector(".spark-host").append(c.spark);
+    box.append(art);
+  }
+}
+
+function tipShow(html, x, y) {
+  const tip = document.getElementById("tip");
+  tip.innerHTML = html;
+  tip.style.display = "block";
+  const pad = 12;
+  const w = tip.offsetWidth, h = tip.offsetHeight;
+  let left = x + 14, top = y + 14;
+  if (left + w > window.innerWidth - 8) left = x - w - 10;
+  if (top + h > window.innerHeight - 8) top = y - h - 10;
+  tip.style.left = Math.max(8, left) + "px";
+  tip.style.top = Math.max(8, top) + "px";
+}
+function tipHide() { document.getElementById("tip").style.display = "none"; }
+
+function bindTip(el, htmlFn) {
+  el.addEventListener("pointermove", (e) => tipShow(htmlFn(), e.clientX, e.clientY));
+  el.addEventListener("pointerleave", tipHide);
+}
+
+function semFalha(ids) {
+  return ids.length === 1 ? "A doca " + ids[0] + " ficou sem falha." : "As docas " + lista(ids) + " ficaram sem falha.";
+}
+function lista(arr) {
+  if (arr.length <= 1) return arr[0] || "";
+  if (arr.length === 2) return arr[0] + " e " + arr[1];
+  if (arr.length === 3) return arr[0] + ", " + arr[1] + " e " + arr[2];
+  return arr[0] + ", " + arr[1] + " e outras";
+}
+function vezes(a, b) {
+  if (!b || a / b < 1.15) return "";
+  const n = a / b;
+  const text = n >= 10
+    ? nf.format(Math.round(n))
+    : n.toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+  return text + "×";
+}
+function qtyLabel(n, dock) {
+  if (dock && isContainerDock(dock)) return nf.format(n) + (n === 1 ? " container" : " containers");
+  return nf.format(n) + (n === 1 ? " falha" : " falhas");
+}
+function extremes(items, valueOf) {
+  const scored = items.map(item => ({ item, v: valueOf(item) }));
+  if (!scored.some(s => s.v > 0)) return null;
+  const maxV = Math.max(...scored.map(s => s.v));
+  const minAll = Math.min(...scored.map(s => s.v));
+  const positive = scored.filter(s => s.v > 0);
+  const minPos = Math.min(...positive.map(s => s.v));
+  return {
+    worst: scored.filter(s => s.v === maxV),
+    bestAny: scored.filter(s => s.v === minAll),
+    bestActive: positive.filter(s => s.v === minPos)
+  };
+}
+function sideButton(opts) {
+  const width = opts.bestZero ? 0 : Math.max(opts.full ? 100 : 6, Math.round(opts.shareBar));
+  const title = opts.kind === "hour" ? "Levar esta hora para o apontamento" : "Isolar esta doca";
+  return '<button type="button" class="side ' + opts.tone + (opts.on ? " on" : "") + '" data-kind="' + opts.kind + '" data-id="' + opts.id + '" title="' + title + '">' +
+    "<span><span class=\"role\">" + opts.role + "</span>" +
+    "<span class=\"who\">" + opts.who + "</span>" +
+    "<span class=\"qty\">" + opts.qty + "</span>" +
+    deltaHtml(opts.change) + "</span>" +
+    '<span class="meter"><i class="' + opts.tone + '" style="width:' + width + '%"></i></span>' +
+    "</button>";
+}
+function renderHoraInsights() {
+  const host = document.getElementById("horaInsights");
+  const hours = hourTotals(state.date, state.dock);
+  const prevDate = addDays(state.date, -1);
+  const prevHours = hourTotals(prevDate, state.dock);
+  const hourRank = extremes(hours, r => r.total);
+  const docks = dockTotals(state.date).map(r => ({
+    dock: r.dock,
+    total: (state.showKd ? r.kd : 0) + (state.showLocal && !isContainerDock(r.dock) ? r.local : 0)
+  }));
+  const prevDockMap = {};
+  dockTotals(prevDate).forEach(r => {
+    prevDockMap[r.dock] = (state.showKd ? r.kd : 0) + (state.showLocal && !isContainerDock(r.dock) ? r.local : 0);
+  });
+  const dockRank = extremes(docks, r => r.total);
+  if (!hourRank || !dockRank) {
+    host.innerHTML = "";
+    return;
+  }
+  const dayTotal = hours.reduce((s, r) => s + r.total, 0);
+  const dockDay = docks.reduce((s, r) => s + r.total, 0);
+  const hw = hourRank.worst[0];
+  const hb = hourRank.bestActive[0];
+  const dw = dockRank.worst[0];
+  const db = dockRank.bestAny[0];
+  const hourShare = dayTotal ? Math.round(hw.v / dayTotal * 100) : 0;
+  const dockShare = dockDay ? Math.round(dw.v / dockDay * 100) : 0;
+  const hx = vezes(hw.v, hb.v);
+  const dx = vezes(dw.v, db.v);
+  const worstHours = lista(hourRank.worst.map(s => hh(s.item.h)));
+  const bestHours = lista(hourRank.bestActive.map(s => hh(s.item.h)));
+  const scope = state.dock ? "Na doca " + state.dock + ", " : "";
+  const ofWhat = state.dock ? "do volume da doca" : "do dia";
+  let hourFrase;
+  if (hw.v === hb.v) hourFrase = scope + "as horas com falha ficaram no mesmo volume, " + qtyLabel(hw.v, state.dock) + ".";
+  else if (hourRank.worst.length > 1) hourFrase = scope + worstHours + " empataram como pior horário, " + qtyLabel(hw.v, state.dock) + " em cada uma (" + hourShare + "% " + ofWhat + "). A mais calma foi " + bestHours + ", com " + qtyLabel(hb.v, state.dock) + ".";
+  else hourFrase = scope + hh(hw.item.h) + " foi o pior horário: " + qtyLabel(hw.v, state.dock) + ", " + hourShare + "% " + ofWhat + (hx ? ", " + hx + " " + (hourRank.bestActive.length > 1 ? "as horas " + bestHours : "a " + bestHours) + " (" + qtyLabel(hb.v, state.dock) + ")." : ", contra " + qtyLabel(hb.v, state.dock) + " em " + bestHours + ".");
+  if (!state.dock) hourFrase = hourFrase.charAt(0).toUpperCase() + hourFrase.slice(1);
+  const worstDocks = lista(dockRank.worst.map(s => s.item.dock));
+  const bestDocks = lista(dockRank.bestAny.map(s => s.item.dock));
+  let dockFrase;
+  if (dw.v === db.v) dockFrase = "As docas ficaram no mesmo volume, " + qtyLabel(dw.v) + " cada.";
+  else if (dockRank.worst.length > 1) dockFrase = "As docas " + worstDocks + " empataram no pico, " + qtyLabel(dw.v) + " em cada uma (" + dockShare + "% do dia). " + (db.v === 0 ? semFalha(dockRank.bestAny.map(s => s.item.dock)) : (dockRank.bestAny.length > 1 ? "As menores foram as docas " + bestDocks : "A menor foi a doca " + db.item.dock) + ", com " + qtyLabel(db.v, db.item.dock) + ".");
+  else if (db.v === 0) dockFrase = "A doca " + dw.item.dock + " foi a pior: " + qtyLabel(dw.v, dw.item.dock) + ", " + dockShare + "% do dia. " + semFalha(dockRank.bestAny.map(s => s.item.dock));
+  else dockFrase = "A doca " + dw.item.dock + " foi a pior: " + qtyLabel(dw.v, dw.item.dock) + ", " + dockShare + "% do dia" + (dx ? ", " + dx + " " + (dockRank.bestAny.length > 1 ? "as docas " + bestDocks : "a doca " + db.item.dock) + " (" + qtyLabel(db.v, db.item.dock) + ")." : ", contra " + qtyLabel(db.v, db.item.dock) + " na doca " + bestDocks + ".");
+  const prevHour = h => {
+    const row = prevHours.find(r => r.h === h);
+    return row ? row.total : 0;
+  };
+  host.innerHTML =
+    '<section class="cmp"><div class="cmp-k">' + (state.dock ? "HORÁRIOS · DOCA " + state.dock : "HORÁRIOS") + '</div><div class="cmp-sides">' +
+    sideButton({ tone: "bad", kind: "hour", id: hw.item.h, role: "PIOR HORÁRIO", who: hh(hw.item.h), qty: qtyLabel(hw.v, state.dock), change: change(hw.v, prevHour(hw.item.h)), full: true, shareBar: 100, on: state.hour === hw.item.h }) +
+    sideButton({ tone: "good", kind: "hour", id: hb.item.h, role: "MELHOR HORÁRIO", who: hh(hb.item.h), qty: qtyLabel(hb.v, state.dock), change: change(hb.v, prevHour(hb.item.h)), shareBar: hw.v ? hb.v / hw.v * 100 : 0, on: state.hour === hb.item.h }) +
+    '</div><p class="cmp-frase">' + hourFrase + "</p></section>" +
+    '<section class="cmp"><div class="cmp-k">DOCAS</div><div class="cmp-sides">' +
+    sideButton({ tone: "bad", kind: "dock", id: dw.item.dock, role: "PIOR DOCA", who: dw.item.dock, qty: qtyLabel(dw.v, dw.item.dock), change: change(dw.v, prevDockMap[dw.item.dock] || 0), full: true, shareBar: 100, on: state.dock === dw.item.dock }) +
+    sideButton({ tone: "good", kind: "dock", id: db.item.dock, role: "MELHOR DOCA", who: db.item.dock, qty: db.v === 0 ? "sem falha" : qtyLabel(db.v, db.item.dock), change: change(db.v, prevDockMap[db.item.dock] || 0), bestZero: db.v === 0, shareBar: dw.v ? db.v / dw.v * 100 : 0, on: state.dock === db.item.dock }) +
+    '</div><p class="cmp-frase">' + dockFrase + "</p></section>";
+  host.querySelectorAll("button.side").forEach(b => b.addEventListener("click", () => {
+    if (b.dataset.kind === "hour") state.hour = Number(b.dataset.id);
+    else state.dock = state.dock === b.dataset.id ? null : b.dataset.id;
+    render();
+  }));
+}
+
+function renderHourChart() {
+  const host = document.getElementById("horaChart");
+  clear(host);
+  const note = document.getElementById("horaNote");
+  note.replaceChildren();
+  const rows = hourTotals(state.date, state.dock);
+  if (!rows.some(r => r.total > 0)) {
+    host.innerHTML = '<div class="empty">Nenhuma falha neste dia.<br><button type="button" id="emptyGo">Apontar este dia</button></div>';
+    document.getElementById("emptyGo").onclick = () => setTab("apontamento");
+    document.getElementById("horaInsights").innerHTML = "";
+    return;
+  }
+  if (state.mode === "mapa") renderHeat(host, rows);
+  else if (state.mode === "docas") renderSmallMultiples(host);
+  else renderStacked(host, rows);
+  renderHoraInsights();
+}
+
+function renderStacked(host, rows) {
+  const n = rows.length;
+  const W = Math.max(800, 56 + n * 42), H = 320;
+  const pad = { l: 44, r: 12, t: 28, b: 34 };
+  const svg = svgEl("svg", { viewBox: "0 0 " + W + " " + H, role: "img" });
+  const totals = rows.map(r => r.total);
+  const info = scaleInfo(totals);
+  const plotW = W - pad.l - pad.r;
+  const plotH = H - pad.t - pad.b;
+  const slot = plotW / n;
+  const bw = Math.min(34, slot * 0.62);
+  for (let g = 0; g <= 4; g++) {
+    const y = pad.t + plotH - (plotH * g) / 4;
+    svg.append(svgEl("line", { x1: pad.l, x2: W - pad.r, y1: y, y2: y, stroke: "#e8edf3" }));
+    svgText(svg, { x: pad.l - 8, y: y + 4, "text-anchor": "end", fill: "#94a3b8", "font-size": "11" }, nf.format(Math.round(info.max * g / 4)));
+  }
+  rows.forEach((r, i) => {
+    const x = pad.l + i * slot + (slot - bw) / 2;
+    const base = pad.t + plotH;
+    const drawH = (v) => Math.min(v, info.max) / info.max * plotH;
+    let y = base;
+    const parts = [];
+    if (state.showLocal && r.local) parts.push(["local", r.local, "#f5a524"]);
+    if (state.showKd && r.kd) parts.push(["kd", r.kd, "#3b82f6"]);
+    for (const [name, val, color] of parts) {
+      const h = drawH(val);
+      y -= h;
+      const rect = svgEl("rect", { x, y, width: bw, height: Math.max(h, 0), fill: color, rx: name === parts[parts.length - 1][0] ? 4 : 0 });
+      svg.append(rect);
+    }
+    if (r.total > info.max) {
+      const yy = pad.t + 8;
+      svg.append(svgEl("path", { d: "M" + (x + 2) + " " + (yy + 8) + " l" + (bw - 4) + " -6 M" + (x + 2) + " " + (yy + 14) + " l" + (bw - 4) + " -6", stroke: "white", "stroke-width": "2" }));
+    }
+    if (r.total > 0) {
+      svgText(svg, {
+        x: x + bw / 2, y: Math.max(14, y - 6), "text-anchor": "middle",
+        fill: "#0f172a", "font-size": "11", "font-weight": "700"
+      }, nf.format(r.total));
+    }
+    const lab = svgEl("text", { x: x + bw / 2, y: H - 12, "text-anchor": "middle", fill: r.h === state.hour ? "#0e1a33" : "#64748b", "font-size": "11", "font-weight": r.h === state.hour ? "800" : "600" });
+    lab.textContent = hh(r.h);
+    svg.append(lab);
+    const hit = svgEl("rect", { x: pad.l + i * slot, y: pad.t, width: slot, height: plotH, fill: "transparent" });
+    hit.style.cursor = "pointer";
+    bindTip(hit, () => "<b>" + hh(r.h) + "</b><br>KD " + nf.format(r.kd) + "<br>Local " + nf.format(r.local) + "<br>Total " + nf.format(r.total));
+    hit.addEventListener("click", () => { state.hour = r.h; render(); });
+    svg.append(hit);
+  });
+  host.append(svg);
+  if (info.clipped) {
+    const div = document.createElement("div");
+    div.className = "note";
+    div.textContent = "A escala foi recortada para as horas baixas continuarem visíveis. O pico real é " + nf.format(info.realMax) + " e o valor impresso em cada barra é o total verdadeiro.";
+    document.getElementById("horaNote").append(div);
+  }
+}
+
+function heatColor(t, blue) {
+  const stops = blue
+    ? [[239, 246, 255], [147, 197, 253], [37, 99, 235], [30, 64, 175]]
+    : [[241, 245, 249], [254, 243, 199], [245, 158, 11], [220, 38, 38]];
+  const x = Math.max(0, Math.min(1, t)) * (stops.length - 1);
+  const i = Math.min(stops.length - 2, Math.floor(x));
+  const f = x - i;
+  const c = stops[i].map((v, k) => Math.round(v + (stops[i + 1][k] - v) * f));
+  return "rgb(" + c.join(",") + ")";
+}
+function renderHeat(host) {
+  const hours = visibleHours();
+  const matrix = DOCKS.map(dock => hours.map(h => {
+    let kd = 0, local = 0;
+    if (state.showKd) kd = qtyOf(state.date, h, dock, "KD");
+    if (state.showLocal && !isContainerDock(dock)) local = qtyOf(state.date, h, dock, "Local");
+    return kd + local;
+  }));
+  const rowMax = matrix.map(row => Math.max(1, ...row));
+  const left = 78;
+  const slot = 34;
+  const cellW = 30;
+  const W = left + hours.length * slot + 8;
+  const H = 46 + DOCKS.length * 36;
+  const svg = svgEl("svg", { viewBox: "0 0 " + W + " " + H, role: "img" });
+  hours.forEach((h, i) => {
+    svgText(svg, { x: left + i * slot + cellW / 2, y: 18, "text-anchor": "middle", fill: "#64748b", "font-size": "11" }, String(h).padStart(2, "0"));
+  });
+  DOCKS.forEach((dock, r) => {
+    const container = isContainerDock(dock);
+    svgText(svg, {
+      x: 8, y: (container ? 38 : 43) + r * 36,
+      fill: container ? "#1d4ed8" : "#0f172a", "font-size": "12", "font-weight": "800"
+    }, dock);
+    if (container) {
+      svgText(svg, { x: 8, y: 49 + r * 36, fill: "#2563eb", "font-size": "9", "font-weight": "700" }, "container");
+    }
+    hours.forEach((h, c) => {
+      const v = matrix[r][c];
+      const t = v <= 0 ? 0 : v / rowMax[r];
+      const x = left + c * slot;
+      const y = 24 + r * 36;
+      const rect = svgEl("rect", {
+        x, y, width: cellW, height: 28, rx: 6,
+        fill: v ? heatColor(0.18 + t * 0.82, container) : "#f8fafc",
+        stroke: state.dock === dock ? "#312e81" : "#e8edf3"
+      });
+      svg.append(rect);
+      if (v) {
+        svgText(svg, {
+          x: x + cellW / 2, y: 43 + r * 36, "text-anchor": "middle",
+          fill: t > 0.72 ? "white" : "#0f172a", "font-size": "11", "font-weight": "700"
+        }, nf.format(v));
+      }
+      const hit = svgEl("rect", { x, y, width: cellW, height: 28, fill: "transparent" });
+      bindTip(hit, () => container
+        ? "<b>Doca 1G · container · " + hh(h) + "</b><br>" + nf.format(v) + " containers<br>Cada item lançado é um container. Cor pela escala da própria doca."
+        : "<b>Doca " + dock + " · " + hh(h) + "</b><br>" + nf.format(v) + " falhas<br>Cor pela escala desta doca, não do pico geral.");
+      hit.addEventListener("click", () => { state.dock = state.dock === dock ? null : dock; state.hour = h; render(); });
+      svg.append(hit);
+    });
+  });
+  host.append(svg);
+}
+
+function renderSmallMultiples(host) {
+  const wrap = document.createElement("div");
+  wrap.style.display = "grid";
+  wrap.style.gridTemplateColumns = "repeat(3, 1fr)";
+  wrap.style.gap = "8px";
+  const hours = visibleHours(state.date);
+  DOCKS.forEach(dock => {
+    const card = document.createElement("div");
+    card.style.border = "1px solid #e6ebf2";
+    card.style.borderRadius = "12px";
+    card.style.padding = "6px 6px 0";
+    if (state.dock === dock) card.style.boxShadow = "inset 0 0 0 2px #312e81";
+    const title = document.createElement("div");
+    title.style.cssText = "font-size:12px;font-weight:800;padding:2px 4px 0";
+    const container = isContainerDock(dock);
+    if (container) title.style.color = "#1d4ed8";
+    const vals = hours.map(h => (state.showKd ? qtyOf(state.date, h, dock, "KD") : 0) + (state.showLocal && !container ? qtyOf(state.date, h, dock, "Local") : 0));
+    const total = vals.reduce((a, b) => a + b, 0);
+    title.textContent = "Doca " + dock + (container ? " · container" : "") + " · " + nf.format(total);
+    card.append(title);
+    const W = 240, H = 96;
+    const svg = svgEl("svg", { viewBox: "0 0 " + W + " " + H });
+    svg.style.minWidth = "0";
+    const max = Math.max(1, ...vals);
+    const pad = { l: 8, r: 4, t: 14, b: 16 };
+    const slot = (W - pad.l - pad.r) / hours.length;
+    const bw = Math.max(3, slot * 0.7);
+    vals.forEach((v, i) => {
+      const bh = v / max * (H - pad.t - pad.b);
+      const x = pad.l + i * slot;
+      const y = H - pad.b - bh;
+      svg.append(svgEl("rect", { x, y, width: bw, height: bh, rx: 2, fill: v ? (container ? "#2563eb" : "#3b82f6") : "#e8edf3" }));
+      if (v && bw >= 12) svgText(svg, { x: x + bw / 2, y: y - 2, "text-anchor": "middle", "font-size": "8", fill: "#0f172a", "font-weight": "700" }, v);
+    });
+    svgText(svg, { x: pad.l, y: H - 3, "font-size": "8", fill: "#94a3b8" }, "00");
+    svgText(svg, { x: W - pad.r, y: H - 3, "text-anchor": "end", "font-size": "8", fill: "#94a3b8" }, "23");
+    card.append(svg);
+    card.style.cursor = "pointer";
+    card.addEventListener("click", () => { state.dock = state.dock === dock ? null : dock; render(); });
+    wrap.append(card);
+  });
+  host.append(wrap);
+  const div = document.createElement("div");
+  div.className = "note";
+  div.textContent = "Cada doca usa a própria escala. O gráfico baixo não é esmagado pelo pico de outra doca.";
+  document.getElementById("horaNote").append(div);
+}
+
+function renderDockChart() {
+  const host = document.getElementById("docaChart");
+  clear(host);
+  const rows = dockTotals(state.date);
+  const W = 520, H = 250;
+  const pad = { l: 36, r: 10, t: 24, b: 28 };
+  const svg = svgEl("svg", { viewBox: "0 0 " + W + " " + H, role: "img" });
+  svg.style.minWidth = "420px";
+  const totals = rows.map(r => (state.showKd ? r.kd : 0) + (state.showLocal ? r.local : 0));
+  const info = scaleInfo(rows.map(r => r.total));
+  const axis = state.scale === "cheia" ? niceMax(Math.max(...rows.map(r => r.total), 1)) : info.max;
+  const plotW = W - pad.l - pad.r;
+  const plotH = H - pad.t - pad.b;
+  const slot = plotW / DOCKS.length;
+  for (let g = 0; g <= 4; g++) {
+    const y = pad.t + plotH - plotH * g / 4;
+    svg.append(svgEl("line", { x1: pad.l, x2: W - pad.r, y1: y, y2: y, stroke: "#e8edf3" }));
+  }
+  rows.forEach((r, i) => {
+    const groupW = Math.min(54, slot * 0.7);
+    const x0 = pad.l + i * slot + (slot - groupW) / 2;
+    const bw = groupW / 2 - 2;
+    const base = pad.t + plotH;
+    const kdH = Math.min(r.kd, axis) / axis * plotH;
+    const loH = Math.min(r.local, axis) / axis * plotH;
+    if (state.dock === r.dock) {
+      svg.append(svgEl("rect", { x: pad.l + i * slot + 4, y: pad.t - 6, width: slot - 8, height: plotH + 24, rx: 8, fill: "#eef2ff" }));
+    }
+    if (state.showKd) svg.append(svgEl("rect", { x: x0, y: base - kdH, width: bw, height: kdH, rx: 3, fill: "#3b82f6" }));
+    if (state.showLocal) svg.append(svgEl("rect", { x: x0 + bw + 4, y: base - loH, width: bw, height: loH, rx: 3, fill: "#f5a524" }));
+    if (state.showKd && r.kd) svgText(svg, { x: x0 + bw / 2, y: base - kdH - 4, "text-anchor": "middle", "font-size": "10", "font-weight": "700", fill: "#1d4ed8" }, r.kd);
+    if (state.showLocal && r.local) svgText(svg, { x: x0 + bw + 4 + bw / 2, y: base - loH - 4, "text-anchor": "middle", "font-size": "10", "font-weight": "700", fill: "#b45309" }, r.local);
+    svgText(svg, { x: pad.l + i * slot + slot / 2, y: H - 8, "text-anchor": "middle", "font-size": "12", "font-weight": "800", fill: isContainerDock(r.dock) ? "#1d4ed8" : "#0f172a" }, r.dock);
+    const hit = svgEl("rect", { x: pad.l + i * slot, y: pad.t, width: slot, height: plotH, fill: "transparent" });
+    hit.style.cursor = "pointer";
+    bindTip(hit, () => isContainerDock(r.dock)
+      ? "<b>Doca 1G · container</b><br>" + nf.format(r.kd) + " containers"
+      : "<b>Doca " + r.dock + "</b><br>KD " + r.kd + "<br>Local " + r.local + "<br>Total " + r.total);
+    hit.addEventListener("click", () => { state.dock = state.dock === r.dock ? null : r.dock; render(); });
+    svg.append(hit);
+  });
+  host.append(svg);
+
+  const day = dayParts(state.date);
+  const prevRows = dockTotals(addDays(state.date, -1));
+  let html = "<table><thead><tr><th>Doca</th><th>KD</th><th>Local</th><th>Total</th><th>Parte</th><th>Vs ontem</th></tr></thead><tbody>";
+  rows.forEach((r, i) => {
+    const share = day.total ? Math.round(r.total / day.total * 100) : 0;
+    const ch = change(r.total, prevRows[i].total);
+    const cls = ch.dir === "flat" ? "flat" : ch.good ? "good" : "bad";
+    const word = ch.word ? ch.word : "—";
+    const dockCell = isContainerDock(r.dock) ? r.dock + ' <span class="tag" style="color:#1d4ed8">container</span>' : r.dock;
+    const localCell = isContainerDock(r.dock) ? "—" : nf.format(r.local);
+    html += '<tr class="click' + (state.dock === r.dock ? " on" : "") + '" data-dock="' + r.dock + '"><td>' + dockCell + "</td><td>" + nf.format(r.kd) + "</td><td>" + localCell + "</td><td><b>" + nf.format(r.total) + "</b></td><td>" + share + '%</td><td class="tag ' + cls + '">' + word + "</td></tr>";
+  });
+  html += "</tbody></table>";
+  const table = document.getElementById("docaTable");
+  table.innerHTML = html;
+  table.querySelectorAll("tr[data-dock]").forEach(tr => {
+    tr.addEventListener("click", () => {
+      const d = tr.getAttribute("data-dock");
+      state.dock = state.dock === d ? null : d;
+      render();
+    });
+  });
+}
+
+function renderTrend() {
+  const dates = windowDates();
+  const series = dates.map(d => ({ date: d, ...dayParts(d) }));
+  const host = document.getElementById("trendChart");
+  clear(host);
+  const sum = series.reduce((s, x) => s + x.total, 0);
+  const withData = series.filter(x => x.total > 0);
+  const avg = withData.length ? sum / withData.length : 0;
+  const first = withData[0], last = withData[withData.length - 1];
+  const ch = first && last ? change(last.total, first.total) : change(0, null);
+  const worst = withData.slice().sort((a, b) => b.total - a.total)[0];
+  const best = withData.slice().sort((a, b) => a.total - b.total)[0];
+  document.getElementById("trendCallouts").innerHTML =
+    pill("Acumulado no período", nf.format(sum)) +
+    pill("Média por dia", nf.format(Math.round(avg))) +
+    pill("Do início ao fim", ch.word ? ch.text + " " + ch.word : "—") +
+    pill("Pior dia", worst ? fmtDate(worst.date) + " · " + nf.format(worst.total) : "—") +
+    pill("Melhor dia", best ? fmtDate(best.date) + " · " + nf.format(best.total) : "—");
+
+  if (!withData.length) {
+    host.innerHTML = '<div class="empty">Ainda não há dias para comparar.</div>';
+    document.getElementById("trendTable").innerHTML = "";
+    return;
+  }
+  const W = 860, H = 320;
+  const pad = { l: 44, r: 16, t: 24, b: 36 };
+  const svg = svgEl("svg", { viewBox: "0 0 " + W + " " + H, role: "img" });
+  const max = niceMax(Math.max(...series.map(x => Math.max(x.total, x.kd, x.local)), 1));
+  const plotW = W - pad.l - pad.r, plotH = H - pad.t - pad.b;
+  for (let g = 0; g <= 4; g++) {
+    const y = pad.t + plotH - plotH * g / 4;
+    svg.append(svgEl("line", { x1: pad.l, x2: W - pad.r, y1: y, y2: y, stroke: "#e8edf3" }));
+    svgText(svg, { x: pad.l - 8, y: y + 4, "text-anchor": "end", fill: "#94a3b8", "font-size": "11" }, nf.format(Math.round(max * g / 4)));
+  }
+  const xAt = i => pad.l + (series.length === 1 ? plotW / 2 : (plotW * i) / (series.length - 1));
+  const yAt = v => pad.t + plotH - (v / max) * plotH;
+  function drawLine(key, color) {
+    const pts = series.map((s, i) => [xAt(i), yAt(s[key])]);
+    const d = pts.map((p, i) => (i ? "L" : "M") + p[0].toFixed(1) + " " + p[1].toFixed(1)).join(" ");
+    if (key === "total") {
+      const fill = d + " L" + pts[pts.length - 1][0].toFixed(1) + " " + (pad.t + plotH) + " L" + pts[0][0].toFixed(1) + " " + (pad.t + plotH) + " Z";
+      svg.append(svgEl("path", { d: fill, fill: color, opacity: "0.08" }));
+    }
+    svg.append(svgEl("path", { d, fill: "none", stroke: color, "stroke-width": key === "total" ? "2.6" : "2", "stroke-linejoin": "round" }));
+    pts.forEach((p, i) => {
+      const dot = svgEl("circle", { cx: p[0], cy: p[1], r: series[i].date === state.date ? 5 : 3.2, fill: "white", stroke: color, "stroke-width": "2" });
+      svg.append(dot);
+    });
+  }
+  if (state.showLocal) drawLine("local", "#f5a524");
+  if (state.showKd) drawLine("kd", "#3b82f6");
+  drawLine("total", "#6d5efc");
+  const step = series.length > 20 ? 5 : series.length > 12 ? 2 : 1;
+  series.forEach((s, i) => {
+    if (i % step !== 0 && s.date !== state.date) return;
+    svgText(svg, { x: xAt(i), y: H - 12, "text-anchor": "middle", fill: s.date === state.date ? "#0e1a33" : "#64748b", "font-size": "11", "font-weight": s.date === state.date ? "800" : "600" }, fmtDate(s.date));
+    const hit = svgEl("rect", { x: xAt(i) - (plotW / series.length) / 2, y: pad.t, width: plotW / series.length, height: plotH, fill: "transparent" });
+    hit.style.cursor = "pointer";
+    const prev = i ? series[i - 1].total : null;
+    const c = i ? change(s.total, prev) : null;
+    bindTip(hit, () => "<b>" + fmtDateLong(s.date) + "</b><br>Acumulado " + nf.format(s.total) + "<br>KD " + nf.format(s.kd) + " · Local " + nf.format(s.local) + (c && c.word ? "<br>" + c.text + " " + c.word : ""));
+    hit.addEventListener("click", () => { state.date = s.date; setTab("geral"); });
+    svg.append(hit);
+  });
+  host.append(svg);
+
+  const rowsHtml = [];
+  for (let i = series.length - 1; i >= 0; i--) {
+    const s = series[i];
+    const prev = i ? series[i - 1].total : null;
+    const c = i ? change(s.total, prev) : { dir: "flat", word: "início", text: "" };
+    const cls = c.dir === "flat" ? "flat" : c.good ? "good" : "bad";
+    if (!s.total && !(c.word)) continue;
+    const vs = c.text && c.word && c.text !== c.word ? c.text + " " + c.word : (c.word || c.text || "—");
+    rowsHtml.push('<tr class="click" data-date="' + s.date + '"><td>' + fmtDateLong(s.date) + "</td><td><b>" + nf.format(s.total) + "</b></td><td>" + nf.format(s.kd) + "</td><td>" + nf.format(s.local) + '</td><td class="tag ' + cls + '">' + vs + "</td></tr>");
+  }
+  const head = "<table><thead><tr><th>Dia</th><th>Acumulado</th><th>KD</th><th>Local</th><th>Vs dia anterior</th></tr></thead><tbody>";
+  const table = document.getElementById("trendTable");
+  if (pdfMode && rowsHtml.length > 10) {
+    const mid = Math.ceil(rowsHtml.length / 2);
+    table.innerHTML = '<div class="trend-cols">' + head + rowsHtml.slice(0, mid).join("") + "</tbody></table>" + head + rowsHtml.slice(mid).join("") + "</tbody></table></div>";
+  } else {
+    table.innerHTML = head + rowsHtml.join("") + "</tbody></table>";
+  }
+  table.querySelectorAll("tr[data-date]").forEach(tr => tr.addEventListener("click", () => { state.date = tr.getAttribute("data-date"); setTab("geral"); }));
+}
+function pill(label, value) {
+  return '<div class="pill"><span>' + label + "</span><b>" + value + "</b></div>";
+}
+
+function renderApontamento() {
+  document.getElementById("hourNow").textContent = hh(state.hour);
+  const chips = document.getElementById("hourChips");
+  clear(chips);
+  const nowH = new Date().getHours();
+  for (let h = 0; h < 24; h++) {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.textContent = hh(h);
+    if (h === state.hour) b.classList.add("on");
+    if (state.date === todayIso() && h === nowH) b.classList.add("nowish");
+    b.addEventListener("click", () => { state.hour = h; render(); });
+    chips.append(b);
+  }
+  const on = chips.querySelector(".on");
+  if (on) chips.scrollLeft = on.offsetLeft - chips.clientWidth / 2 + on.offsetWidth / 2;
+  document.querySelectorAll("#originSeg button").forEach(b => b.classList.toggle("on", b.dataset.origin === state.origin));
+  const parts = dayParts(state.date);
+  document.getElementById("liveStats").innerHTML =
+    "<div><b>" + nf.format(parts.total) + "</b><span>Acumulado</span></div>" +
+    "<div><b>" + nf.format(parts.kd) + "</b><span>KD</span></div>" +
+    "<div><b>" + nf.format(parts.local) + "</b><span>Local</span></div>";
+
+  const docks = document.getElementById("docks");
+  clear(docks);
+  DOCKS.forEach(dock => {
+    const container = isContainerDock(dock);
+    const q = qtyOf(state.date, state.hour, dock, container ? "KD" : state.origin);
+    const kd = qtyOf(state.date, state.hour, dock, "KD");
+    const local = qtyOf(state.date, state.hour, dock, "Local");
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "dock" + (container ? " container" : "");
+    btn.innerHTML = '<span class="nm">DOCA ' + dock + '</span><span class="q">' + nf.format(q) + '</span><span class="split">' + (container ? "Container" : "KD " + kd + " · Local " + local) + '</span><span class="minus" data-minus="1">−</span>';
+    btn.addEventListener("click", (e) => {
+      if (e.target.closest("[data-minus]")) return;
+      if (e.target.classList.contains("q")) {
+        const typed = prompt(container ? "Total de containers na doca 1G às " + hh(state.hour) : "Total de falhas " + state.origin + " na doca " + dock + " às " + hh(state.hour), String(q));
+        if (typed == null) return;
+        const n = Number(String(typed).replace(",", "."));
+        if (!Number.isFinite(n) || n < 0) return;
+        setQty(dock, Math.round(n));
+        return;
+      }
+      addQty(dock, 1);
+    });
+    btn.querySelector("[data-minus]").addEventListener("click", (e) => { e.stopPropagation(); addQty(dock, -1); });
+    docks.append(btn);
+  });
+
+  const list = recordsOn(state.date).slice().sort((a, b) => a.hour - b.hour || a.dock.localeCompare(b.dock) || a.origin.localeCompare(b.origin));
+  const host = document.getElementById("dayList");
+  if (!list.length) {
+    host.innerHTML = '<div class="empty">Nenhum lançamento neste dia.</div>';
+    return;
+  }
+  let html = "<table><thead><tr><th>Hora</th><th>Doca</th><th>Origem</th><th>Falhas</th><th></th></tr></thead><tbody>";
+  for (const r of list) {
+    const originName = isContainerDock(r.dock) ? "Container" : r.origin;
+    html += "<tr><td>" + hh(r.hour) + "</td><td>" + r.dock + "</td><td>" + originName + "</td><td><b>" + nf.format(r.qty) + "</b></td><td><button type='button' class='row-del' data-k='" + recKey(r) + "'>Excluir</button></td></tr>";
+  }
+  html += "</tbody></table>";
+  host.innerHTML = html;
+  host.querySelectorAll(".row-del").forEach(b => b.addEventListener("click", () => {
+    state.records = state.records.filter(r => recKey(r) !== b.dataset.k);
+    render();
+  }));
+}
+
+function addQty(dock, delta) {
+  const cur = qtyOf(state.date, state.hour, dock, originFor(dock));
+  setQty(dock, Math.max(0, cur + delta));
+}
+function setQty(dock, qty) {
+  const draft = { date: state.date, hour: state.hour, dock, origin: originFor(dock), qty, note: "", demo: false };
+  const k = recKey(draft);
+  state.records = state.records.filter(r => recKey(r) !== k);
+  if (qty > 0) state.records.push(draft);
+  render();
+}
+
+function renderSummary() {
+  const cur = dayParts(state.date);
+  const prev = dayParts(addDays(state.date, -1));
+  const ch = change(cur.total, prev.total);
+  const ph = peakHour(state.date);
+  const pd = peakDock(state.date);
+  const cls = ch.dir === "flat" ? "flat" : ch.good ? "good" : "bad";
+  let frase = "Acumulado do dia: " + nf.format(cur.total) + " falhas.";
+  if (ch.word && ch.text !== "sem base") frase += " " + (ch.dir === "down" ? "Melhora" : ch.dir === "up" ? "Piora" : "Estável") + " de " + ch.text + " em relação ao dia anterior.";
+  else if (prev.total === 0 && cur.total > 0) frase += " Ainda não há acumulado no dia anterior para comparar.";
+  if (ph && pd) frase += " Hora crítica " + hh(ph.h) + " (" + nf.format(ph.total) + "), doca " + pd.dock + " com " + nf.format(pd.total) + ".";
+  if (!cur.total) frase = "Nenhuma falha apontada neste dia. O acumulado aparece assim que a primeira doca for lançada.";
+  document.getElementById("summary").innerHTML =
+    sumOrb("#6d5efc", "Σ", nf.format(cur.total), "Acumulado do dia") +
+    sumOrb("#3b82f6", "K", nf.format(cur.kd), "KD") +
+    sumOrb("#f5a524", "L", nf.format(cur.local), "Local") +
+    '<div class="destaque"><strong>DESTAQUE DO DIA</strong><p>' + frase + '</p><div class="tag ' + cls + '" style="margin-top:6px">' + (ch.word || "") + "</div></div>";
+}
+function sumOrb(color, glyph, value, label) {
+  return '<div class="sum"><div class="orb" style="background:' + color + '">' + glyph + '</div><div><b>' + value + '</b><span>' + label + "</span></div></div>";
+}
+
+function renderChrome() {
+  document.getElementById("dateLabel").textContent = fmtDateLong(state.date);
+  document.querySelectorAll("#windowSeg button").forEach(b => b.classList.toggle("active", Number(b.dataset.window) === state.window));
+  document.querySelectorAll("#modeSeg button").forEach(b => b.classList.toggle("active", b.dataset.mode === state.mode));
+  document.querySelectorAll("#scaleSeg button").forEach(b => b.classList.toggle("active", b.dataset.scale === state.scale));
+  document.getElementById("scaleSeg").classList.toggle("hidden", state.mode !== "barras");
+  document.getElementById("banner").classList.toggle("hidden", !hasDemo());
+  const fr = document.getElementById("filterRow");
+  fr.innerHTML = state.dock ? '<span class="chip">Doca ' + state.dock + ' <button type="button" id="clearDock" aria-label="Limpar doca">×</button></span>' : "";
+  const clearDock = document.getElementById("clearDock");
+  if (clearDock) clearDock.onclick = () => { state.dock = null; render(); };
+  const mapKey = state.mode === "mapa"
+    ? '<span class="key"><i class="sw cell" style="background:#2563eb"></i>Container · 1G</span>' +
+      '<span class="key"><i class="sw cell" style="background:#f59e0b"></i>Demais docas</span>'
+    : "";
+  document.getElementById("legend").innerHTML =
+    '<button type="button" id="legKd" class="' + (state.showKd ? "" : "off") + '"><i class="sw" style="background:#3b82f6"></i>KD</button>' +
+    '<button type="button" id="legLocal" class="' + (state.showLocal ? "" : "off") + '"><i class="sw" style="background:#f5a524"></i>Local</button>' +
+    mapKey;
+  document.getElementById("legKd").onclick = () => { state.showKd = !state.showKd || !state.showLocal ? !state.showKd : false; if (!state.showKd && !state.showLocal) state.showKd = true; render(); };
+  document.getElementById("legLocal").onclick = () => { state.showLocal = !state.showLocal || !state.showKd ? !state.showLocal : false; if (!state.showKd && !state.showLocal) state.showLocal = true; render(); };
+  document.getElementById("horaSub").textContent = state.dock
+    ? "Somente a doca " + state.dock + (isContainerDock(state.dock) ? " (container)" : "") + " no dia " + fmtDate(state.date) + ", das 00h às 23h."
+    : "KD e local somados em cada hora de " + fmtDate(state.date) + ", das 00h às 23h.";
+}
+
+let summaryAnchor = null;
+function enterPdfLayout() {
+  const summary = document.getElementById("summary");
+  if (!summaryAnchor) summaryAnchor = { parent: summary.parentNode, next: summary.nextSibling };
+  document.getElementById("view-geral").after(summary);
+  document.body.classList.add("pdf-export");
+  pdfMode = true;
+}
+function exitPdfLayout() {
+  pdfMode = false;
+  document.body.classList.remove("pdf-export");
+  if (summaryAnchor) summaryAnchor.parent.insertBefore(document.getElementById("summary"), summaryAnchor.next);
+}
+function stampPdf() {
+  const now = new Date();
+  const hm = String(now.getHours()).padStart(2, "0") + "h" + String(now.getMinutes()).padStart(2, "0");
+  const when = fmtDateLong(state.date) + " · " + hm;
+  document.getElementById("pdfStamp").innerHTML = "Página 1 · Visão geral<br>" + when;
+  document.getElementById("pdfTrendHead").textContent = "Página 2 · " + when;
+  document.title = "Visão geral e tendência " + fmtDate(state.date) + " " + hm;
+}
+function render() {
+  if (!pdfMode) save();
+  renderChrome();
+  renderKpis();
+  const showGeral = pdfMode || state.tab === "geral";
+  const showTrend = pdfMode || state.tab === "tendencia";
+  document.getElementById("view-geral").classList.toggle("hidden", !showGeral);
+  document.getElementById("view-tendencia").classList.toggle("hidden", !showTrend);
+  document.getElementById("view-apontamento").classList.toggle("hidden", pdfMode || state.tab !== "apontamento");
+  document.querySelectorAll("nav.tabs button").forEach(b => b.classList.toggle("active", b.dataset.tab === state.tab));
+  if (showGeral) { renderHourChart(); renderDockChart(); }
+  if (showTrend) renderTrend();
+  if (!pdfMode && state.tab === "apontamento") renderApontamento();
+  renderSummary();
+  tipHide();
+}
+function setTab(tab) { state.tab = tab; render(); }
+
+function printOverview() {
+  const prev = { tab: state.tab, dock: state.dock };
+  state.tab = "geral";
+  state.dock = null;
+  enterPdfLayout();
+  render();
+  stampPdf();
+  const restore = () => {
+    window.removeEventListener("afterprint", restore);
+    exitPdfLayout();
+    state.tab = prev.tab;
+    state.dock = prev.dock;
+    document.title = "Controle de instabilidade de saldo — Docas";
+    render();
+  };
+  window.addEventListener("afterprint", restore);
+  setTimeout(() => window.print(), 80);
+}
+
+function exportCsv() {
+  const lines = ["Data;Hora;Doca;Origem;Quantidade;Observacoes"];
+  const rows = state.records.slice().sort((a, b) => a.date.localeCompare(b.date) || a.hour - b.hour || a.dock.localeCompare(b.dock) || a.origin.localeCompare(b.origin));
+  for (const r of rows) {
+    const [y, m, d] = r.date.split("-");
+    const originOut = isContainerDock(r.dock) ? "Container" : r.origin;
+    lines.push([d + "/" + m + "/" + y, String(r.hour).padStart(2, "0"), r.dock, originOut, r.qty, (r.note || "").replaceAll(";", ",")].join(";"));
+  }
+  const blob = new Blob(["\uFEFF" + lines.join("\r\n")], { type: "text/csv;charset=utf-8" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "Instabilidade_saldo_docas.csv";
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+function importCsv(text) {
+  const lines = text.replace(/^\uFEFF/, "").split(/\r?\n/).filter(Boolean);
+  if (!lines.length) return;
+  const header = lines[0].toLowerCase();
+  const sep = header.includes(";") ? ";" : ",";
+  const start = header.includes("data") ? 1 : 0;
+  let n = 0;
+  for (let i = start; i < lines.length; i++) {
+    const c = lines[i].split(sep).map(s => s.trim());
+    if (c.length < 5) continue;
+    let date = c[0];
+    if (/^\d{2}\/\d{2}\/\d{4}$/.test(date)) {
+      const [d, m, y] = date.split("/");
+      date = y + "-" + m + "-" + d;
+    }
+    const hour = Number(String(c[1]).replace("h", ""));
+    const dock = c[2].toUpperCase() === "30" ? "30" : c[2].toUpperCase();
+    const origin = isContainerDock(dock) || /^cont/i.test(c[3]) ? "KD" : (/^loc/i.test(c[3]) ? "Local" : "KD");
+    const qty = Number(String(c[4]).replace(",", "."));
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !DOCKS.includes(dock) || !Number.isFinite(hour) || !Number.isFinite(qty)) continue;
+    const draft = { date, hour, dock, origin, qty: Math.round(qty), note: c[5] || "", demo: false };
+    state.records = state.records.filter(r => recKey(r) !== recKey(draft));
+    if (draft.qty > 0) state.records.push(draft);
+    n++;
+  }
+  state.records = foldContainer(state.records);
+  render();
+  alert(n + " linhas importadas e mescladas.");
+}
+function clearDemo() {
+  state.records = state.records.filter(r => !r.demo);
+  render();
+}
+
+document.querySelectorAll("nav.tabs button").forEach(b => b.addEventListener("click", () => setTab(b.dataset.tab)));
+document.getElementById("goPoint").onclick = () => setTab("apontamento");
+document.getElementById("prevDay").onclick = () => { state.date = addDays(state.date, -1); render(); };
+document.getElementById("nextDay").onclick = () => { state.date = addDays(state.date, 1); render(); };
+document.getElementById("goToday").onclick = () => { state.date = todayIso(); state.hour = new Date().getHours(); render(); };
+document.getElementById("windowSeg").onclick = (e) => {
+  const b = e.target.closest("button"); if (!b) return;
+  state.window = Number(b.dataset.window); render();
+};
+document.getElementById("modeSeg").onclick = (e) => {
+  const b = e.target.closest("button"); if (!b) return;
+  state.mode = b.dataset.mode; render();
+};
+document.getElementById("scaleSeg").onclick = (e) => {
+  const b = e.target.closest("button"); if (!b) return;
+  state.scale = b.dataset.scale; render();
+};
+document.getElementById("prevHour").onclick = () => { state.hour = (state.hour + 23) % 24; render(); };
+document.getElementById("nextHour").onclick = () => { state.hour = (state.hour + 1) % 24; render(); };
+document.getElementById("originSeg").onclick = (e) => {
+  const b = e.target.closest("button"); if (!b) return;
+  state.origin = b.dataset.origin; render();
+};
+document.getElementById("pdfBtn").onclick = printOverview;
+document.getElementById("exportBtn").onclick = exportCsv;
+document.getElementById("importBtn").onclick = () => document.getElementById("file").click();
+document.getElementById("file").onchange = () => {
+  const f = document.getElementById("file").files[0];
+  if (!f) return;
+  const reader = new FileReader();
+  reader.onload = () => importCsv(String(reader.result));
+  reader.readAsText(f, "utf-8");
+  document.getElementById("file").value = "";
+};
+document.getElementById("clearDemoBtn").onclick = clearDemo;
+document.getElementById("bannerClear").onclick = clearDemo;
+document.getElementById("wipeBtn").onclick = () => {
+  if (confirm("Apagar todos os lançamentos deste navegador?")) {
+    state.records = [];
+    render();
+  }
+};
+document.addEventListener("keydown", (e) => {
+  if (e.target.matches("input, textarea") || e.metaKey || e.ctrlKey || e.altKey) return;
+  const map = { "1": "1G", "2": "1K", "3": "1T", "4": "1B", "5": "1C", "6": "30" };
+  if (state.tab === "apontamento" && map[e.key]) { addQty(map[e.key], 1); e.preventDefault(); }
+});
+window.addEventListener("pointerdown", (e) => { if (!e.target.closest("#tip")) tipHide(); });
+
+pdfMode = new URLSearchParams(location.search).has("pdf");
+boot();
+if (pdfMode) {
+  state.tab = "geral";
+  state.date = todayIso();
+  state.hour = new Date().getHours();
+  state.dock = null;
+  enterPdfLayout();
+}
+render();
+if (pdfMode) stampPdf();
+</script>
+</body>
+</html>
