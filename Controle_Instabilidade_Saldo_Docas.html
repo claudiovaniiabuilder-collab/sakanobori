@@ -1725,7 +1725,11 @@ document.addEventListener("keydown", (e) => {
   const map = { "1": "1G", "2": "1K", "3": "1T", "4": "1B", "5": "1C", "6": "30" };
   if (state.tab === "apontamento" && map[e.key]) { addQty(map[e.key], 1); e.preventDefault(); }
 });
-window.addEventListener("pointerdown", (e) => { if (!e.target.closest("#tip")) tipHide(); });
+window.addEventListener("pointerdown", (e) => {
+  if (!e.target.closest("#tip")) tipHide();
+  const menu = document.querySelector("details.menu");
+  if (menu && menu.open && !menu.contains(e.target)) menu.open = false;
+});
 
 pdfMode = new URLSearchParams(location.search).has("pdf");
 boot();
