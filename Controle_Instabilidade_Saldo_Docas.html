@@ -765,9 +765,23 @@ const INITIAL_RECORDS = [
   { date: "2026-11-09", hour: 21, dock: "1K", origin: "Local", qty: 3, note: "", demo: false },
   { date: "2026-11-09", hour: 21, dock: "1T", origin: "Local", qty: 4, note: "", demo: false },
   { date: "2026-11-09", hour: 21, dock: "30", origin: "Local", qty: 5, note: "", demo: false },
-  { date: "2026-11-09", hour: 21, dock: "1G", origin: "KD", qty: 4, note: "", demo: false }
+  { date: "2026-11-09", hour: 21, dock: "1G", origin: "KD", qty: 4, note: "", demo: false },
+  { date: "2026-11-09", hour: 22, dock: "1C", origin: "Local", qty: 16, note: "", demo: false },
+  { date: "2026-11-09", hour: 22, dock: "1G", origin: "KD", qty: 3, note: "", demo: false },
+  { date: "2026-11-09", hour: 22, dock: "1K", origin: "Local", qty: 9, note: "", demo: false },
+  { date: "2026-11-09", hour: 22, dock: "1T", origin: "Local", qty: 5, note: "", demo: false },
+  { date: "2026-11-09", hour: 22, dock: "30", origin: "Local", qty: 5, note: "", demo: false }
 ];
 
+function withInitial(stored) {
+  const map = new Map();
+  for (const r of stored) map.set(recKey(r), { ...r });
+  for (const r of INITIAL_RECORDS) {
+    const copy = { ...r };
+    if (!map.has(recKey(copy))) map.set(recKey(copy), copy);
+  }
+  return foldContainer([...map.values()]);
+}
 function seedOriginal() {
   state.records = foldContainer(INITIAL_RECORDS.map(r => ({ ...r })));
   const dates = [...new Set(state.records.map(r => r.date))].sort();
@@ -782,7 +796,8 @@ function boot() {
   const stored = Array.isArray(data.records) ? data.records : [];
   const demoOnly = stored.length > 0 && stored.every(r => r.demo);
   if (demoOnly) seedOriginal();
-  else state.records = foldContainer(stored);
+  else if (stored.length) state.records = withInitial(stored);
+  else state.records = [];
   if (data.window) state.window = data.window;
   if (data.mode) state.mode = data.mode;
   if (data.scale) state.scale = data.scale;
